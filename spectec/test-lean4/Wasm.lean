@@ -7529,7 +7529,7 @@ inductive fun_vcvtop__ : shape -> shape -> vcvtop__ -> vec_ -> vec_ -> Prop wher
     Forall (fun (c_1 : lane_) => (wf_lane_ (fun_lanetype (.X Lnn_1 (.mk_dim M_1))) c_1)) c_1_lst ->
     Forall (fun (c_lst : (List lane_)) => Forall (fun (c : lane_) => (wf_lane_ Lnn_2 c)) c_lst) c_lst_lst ->
     (var_0 == (some v_half)) ->
-    (c_1_lst == (List.extract (lanes_ (.X Lnn_1 (.mk_dim M_1)) v_1) (fun_half v_half 0 M_2) M_2)) ->
+    (c_1_lst == (List.extract (lanes_ (.X Lnn_1 (.mk_dim M_1)) v_1) (fun_half v_half 0 M_2) ((fun_half v_half 0 M_2) + M_2))) ->
     (c_lst_lst == (setproduct_ lane_ var_1_lst)) ->
     ((List.length (List.map (fun (c_lst : (List lane_)) => (inv_lanes_ (.X Lnn_2 (.mk_dim M_2)) c_lst)) c_lst_lst)) > 0) ->
     (List.contains (List.map (fun (c_lst : (List lane_)) => (inv_lanes_ (.X Lnn_2 (.mk_dim M_2)) c_lst)) c_lst_lst) v) ->
@@ -9967,7 +9967,7 @@ inductive Step_read : config -> (List instr) -> Prop where
     (wf_num_ (numtype_addrtype «at») i) ->
     (wf_num_ nt c) ->
     ((proj_num__0 i) != none) ->
-    ((nbytes_ nt c) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) ((((size nt) : Nat) / (8 : Nat)) : Nat))) ->
+    ((nbytes_ nt c) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + ((((size nt) : Nat) / (8 : Nat)) : Nat)))) ->
     Step_read (.mk_config z [(.CONST (numtype_addrtype «at») i), (.LOAD nt none x ao)]) [(.CONST nt c)]
   | load_pack_oob : forall (z : state) («at» : addrtype) (i : num_) (v_Inn : Inn) (v_n : n) (v_sx : sx) (x : idx) (ao : memarg), 
     (wf_num_ (numtype_addrtype «at») i) ->
@@ -9977,7 +9977,7 @@ inductive Step_read : config -> (List instr) -> Prop where
   | load_pack_val : forall (z : state) («at» : addrtype) (i : num_) (v_Inn : Inn) (v_n : n) (v_sx : sx) (x : idx) (ao : memarg) (c : iN), 
     (wf_num_ (numtype_addrtype «at») i) ->
     ((proj_num__0 i) != none) ->
-    ((ibytes_ v_n c) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (((v_n : Nat) / (8 : Nat)) : Nat))) ->
+    ((ibytes_ v_n c) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + (((v_n : Nat) / (8 : Nat)) : Nat)))) ->
     Step_read (.mk_config z [(.CONST (numtype_addrtype «at») i), (.LOAD (numtype_addrtype v_Inn) (some (.mk_loadop__0 v_Inn (.mk_loadop_Inn (.mk_sz v_n) v_sx))) x ao)]) [(.CONST (numtype_addrtype v_Inn) (.mk_num__0 v_Inn (extend__ v_n (size (numtype_addrtype v_Inn)) v_sx c)))]
   | vload_oob : forall (z : state) («at» : addrtype) (i : num_) (x : idx) (ao : memarg), 
     (wf_num_ (numtype_addrtype «at») i) ->
@@ -9987,7 +9987,7 @@ inductive Step_read : config -> (List instr) -> Prop where
   | vload_val : forall (z : state) («at» : addrtype) (i : num_) (x : idx) (ao : memarg) (c : vec_), 
     (wf_num_ (numtype_addrtype «at») i) ->
     ((proj_num__0 i) != none) ->
-    ((vbytes_ .V128 c) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) ((((vsize .V128) : Nat) / (8 : Nat)) : Nat))) ->
+    ((vbytes_ .V128 c) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + ((((vsize .V128) : Nat) / (8 : Nat)) : Nat)))) ->
     Step_read (.mk_config z [(.CONST (numtype_addrtype «at») i), (.VLOAD .V128 none x ao)]) [(.VCONST .V128 c)]
   | vload_pack_oob : forall (z : state) («at» : addrtype) (i : num_) (v_M : M) (v_K : K) (v_sx : sx) (x : idx) (ao : memarg), 
     (wf_num_ (numtype_addrtype «at») i) ->
@@ -9998,7 +9998,7 @@ inductive Step_read : config -> (List instr) -> Prop where
     (wf_num_ (numtype_addrtype «at») i) ->
     Forall (fun (j : iN) => (wf_lane_ (fun_lanetype (.X (lanetype_Jnn v_Jnn) (.mk_dim v_K))) (.mk_lane__2 v_Jnn (extend__ v_M (jsizenn v_Jnn) v_sx j)))) j_lst ->
     Forall (fun (j : iN) => ((proj_num__0 i) != none)) j_lst ->
-    Forall₂ (fun (j : iN) (k : Nat) => ((ibytes_ v_M j) == (List.extract ((fun_mem z x).BYTES) (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + ((((k * v_M) : Nat) / (8 : Nat)) : Nat)) (((v_M : Nat) / (8 : Nat)) : Nat)))) j_lst k_lst ->
+    Forall₂ (fun (j : iN) (k : Nat) => ((ibytes_ v_M j) == (List.extract ((fun_mem z x).BYTES) (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + ((((k * v_M) : Nat) / (8 : Nat)) : Nat)) ((((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + ((((k * v_M) : Nat) / (8 : Nat)) : Nat)) + (((v_M : Nat) / (8 : Nat)) : Nat))))) j_lst k_lst ->
     ((c == (inv_lanes_ (.X (lanetype_Jnn v_Jnn) (.mk_dim v_K)) (List.map (fun (j : iN) => (.mk_lane__2 v_Jnn (extend__ v_M (jsizenn v_Jnn) v_sx j))) j_lst))) && ((jsizenn v_Jnn) == (v_M * 2))) ->
     Step_read (.mk_config z [(.CONST (numtype_addrtype «at») i), (.VLOAD .V128 (some (.SHAPEX_ (.mk_sz v_M) v_K v_sx)) x ao)]) [(.VCONST .V128 c)]
   | vload_splat_oob : forall (z : state) («at» : addrtype) (i : num_) (v_N : N) (x : idx) (ao : memarg), 
@@ -10010,7 +10010,7 @@ inductive Step_read : config -> (List instr) -> Prop where
     (wf_num_ (numtype_addrtype «at») i) ->
     (wf_lane_ (fun_lanetype (.X (lanetype_Jnn v_Jnn) (.mk_dim v_M))) (.mk_lane__2 v_Jnn (.mk_uN (proj_uN_0 j)))) ->
     ((proj_num__0 i) != none) ->
-    ((ibytes_ v_N j) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (((v_N : Nat) / (8 : Nat)) : Nat))) ->
+    ((ibytes_ v_N j) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + (((v_N : Nat) / (8 : Nat)) : Nat)))) ->
     (v_N == (jsize v_Jnn)) ->
     ((v_M : Nat) == ((128 : Nat) / (v_N : Nat))) ->
     (c == (inv_lanes_ (.X (lanetype_Jnn v_Jnn) (.mk_dim v_M)) (List.replicate v_M (.mk_lane__2 v_Jnn (.mk_uN (proj_uN_0 j)))))) ->
@@ -10023,7 +10023,7 @@ inductive Step_read : config -> (List instr) -> Prop where
   | vload_zero_val : forall (z : state) («at» : addrtype) (i : num_) (v_N : N) (x : idx) (ao : memarg) (c : vec_) (j : iN), 
     (wf_num_ (numtype_addrtype «at») i) ->
     ((proj_num__0 i) != none) ->
-    ((ibytes_ v_N j) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (((v_N : Nat) / (8 : Nat)) : Nat))) ->
+    ((ibytes_ v_N j) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + (((v_N : Nat) / (8 : Nat)) : Nat)))) ->
     (c == (extend__ v_N 128 .U j)) ->
     Step_read (.mk_config z [(.CONST (numtype_addrtype «at») i), (.VLOAD .V128 (some (.ZERO (.mk_sz v_N))) x ao)]) [(.VCONST .V128 c)]
   | vload_lane_oob : forall (z : state) («at» : addrtype) (i : num_) (c_1 : vec_) (v_N : N) (x : idx) (ao : memarg) (j : laneidx), 
@@ -10035,7 +10035,7 @@ inductive Step_read : config -> (List instr) -> Prop where
     (wf_num_ (numtype_addrtype «at») i) ->
     (wf_lane_ (fun_lanetype (.X (lanetype_Jnn v_Jnn) (.mk_dim v_M))) (.mk_lane__2 v_Jnn (.mk_uN (proj_uN_0 k)))) ->
     ((proj_num__0 i) != none) ->
-    ((ibytes_ v_N k) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (((v_N : Nat) / (8 : Nat)) : Nat))) ->
+    ((ibytes_ v_N k) == (List.extract ((fun_mem z x).BYTES) ((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) (((proj_uN_0 (Option.get! (proj_num__0 i))) + (proj_uN_0 (ao.OFFSET))) + (((v_N : Nat) / (8 : Nat)) : Nat)))) ->
     (v_N == (jsize v_Jnn)) ->
     ((v_M : Nat) == (((vsize .V128) : Nat) / (v_N : Nat))) ->
     (c == (inv_lanes_ (.X (lanetype_Jnn v_Jnn) (.mk_dim v_M)) (List.modify (lanes_ (.X (lanetype_Jnn v_Jnn) (.mk_dim v_M)) c_1) (proj_uN_0 j) (fun (_ : lane_) => (.mk_lane__2 v_Jnn (.mk_uN (proj_uN_0 k))))))) ->
@@ -10162,7 +10162,7 @@ inductive Step_read : config -> (List instr) -> Prop where
   | array_new_elem_alloc : forall (z : state) (i : num_) (v_n : n) (x : idx) (y : idx) (ref_lst : (List ref)), 
     (wf_num_ .I32 i) ->
     ((proj_num__0 i) != none) ->
-    (ref_lst == (List.extract ((fun_elem z y).REFS) (proj_uN_0 (Option.get! (proj_num__0 i))) v_n)) ->
+    (ref_lst == (List.extract ((fun_elem z y).REFS) (proj_uN_0 (Option.get! (proj_num__0 i))) ((proj_uN_0 (Option.get! (proj_num__0 i))) + v_n))) ->
     Step_read (.mk_config z [(.CONST .I32 i), (.CONST .I32 (.mk_num__0 .I32 (.mk_uN v_n))), (.ARRAY_NEW_ELEM x y)]) ((List.map (fun (v_ref : ref) => (instr_ref v_ref)) ref_lst) ++ [(.ARRAY_NEW_FIXED x (.mk_uN v_n))])
   | array_new_data_oob : forall (z : state) (i : num_) (v_n : n) (x : idx) (y : idx) (mut_opt : (Option «mut»)) (zt : storagetype), 
     (wf_num_ .I32 i) ->
@@ -10177,7 +10177,7 @@ inductive Step_read : config -> (List instr) -> Prop where
     Forall (fun (c : lit_) => (wf_lit_ zt c)) c_lst ->
     (Expand (fun_type z x) (.ARRAY (.mk_fieldtype mut_opt zt))) ->
     ((proj_num__0 i) != none) ->
-    ((concatn_ byte (List.map (fun (c : lit_) => (zbytes_ zt c)) c_lst) ((((zsize zt) : Nat) / (8 : Nat)) : Nat)) == (List.extract ((fun_data z y).BYTES) (proj_uN_0 (Option.get! (proj_num__0 i))) ((((v_n * (zsize zt)) : Nat) / (8 : Nat)) : Nat))) ->
+    ((concatn_ byte (List.map (fun (c : lit_) => (zbytes_ zt c)) c_lst) ((((zsize zt) : Nat) / (8 : Nat)) : Nat)) == (List.extract ((fun_data z y).BYTES) (proj_uN_0 (Option.get! (proj_num__0 i))) ((proj_uN_0 (Option.get! (proj_num__0 i))) + ((((v_n * (zsize zt)) : Nat) / (8 : Nat)) : Nat)))) ->
     Step_read (.mk_config z [(.CONST .I32 i), (.CONST .I32 (.mk_num__0 .I32 (.mk_uN v_n))), (.ARRAY_NEW_DATA x y)]) ((List.map (fun (var_0 : lit_) => (const (Option.get! (cunpack zt)) var_0)) var_0_lst) ++ [(.ARRAY_NEW_FIXED x (.mk_uN v_n))])
   | array_get_null : forall (z : state) (ht : heaptype) (i : num_) (sx_opt : (Option sx)) (x : idx), 
     (wf_num_ .I32 i) ->
@@ -10350,7 +10350,7 @@ inductive Step_read : config -> (List instr) -> Prop where
     (wf_lit_ zt c) ->
     (¬(Step_read_before_array_init_data_num (.mk_config z [(.REF_ARRAY_ADDR a), (.CONST .I32 i), (.CONST .I32 j), (.CONST .I32 (.mk_num__0 .I32 (.mk_uN v_n))), (.ARRAY_INIT_DATA x y)]))) ->
     (Expand (fun_type z x) (.ARRAY (.mk_fieldtype mut_opt zt))) ->
-    ((zbytes_ zt c) == (List.extract ((fun_data z y).BYTES) (proj_uN_0 (Option.get! (proj_num__0 j))) ((((zsize zt) : Nat) / (8 : Nat)) : Nat))) ->
+    ((zbytes_ zt c) == (List.extract ((fun_data z y).BYTES) (proj_uN_0 (Option.get! (proj_num__0 j))) ((proj_uN_0 (Option.get! (proj_num__0 j))) + ((((zsize zt) : Nat) / (8 : Nat)) : Nat)))) ->
     Step_read (.mk_config z [(.REF_ARRAY_ADDR a), (.CONST .I32 i), (.CONST .I32 j), (.CONST .I32 (.mk_num__0 .I32 (.mk_uN v_n))), (.ARRAY_INIT_DATA x y)]) [(.REF_ARRAY_ADDR a), (.CONST .I32 i), (const (Option.get! (cunpack zt)) var_0), (.ARRAY_SET x), (.REF_ARRAY_ADDR a), (.CONST .I32 (.mk_num__0 .I32 (.mk_uN ((proj_uN_0 (Option.get! (proj_num__0 i))) + 1)))), (.CONST .I32 (.mk_num__0 .I32 (.mk_uN ((proj_uN_0 (Option.get! (proj_num__0 j))) + ((((zsize zt) : Nat) / (8 : Nat)) : Nat))))), (.CONST .I32 (.mk_num__0 .I32 (.mk_uN (((v_n : Nat) - (1 : Nat)) : Nat)))), (.ARRAY_INIT_DATA x y)]
 
 /- Recursive Definition at: ../../../../specification/wasm-3.0/4.3-execution.instructions.spectec:5.1-5.88 -/

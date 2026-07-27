@@ -3037,7 +3037,7 @@ inductive Step_read : config -> (List admininstr) -> Prop where
     (wf_val_ .I32 i) ->
     (wf_val_ t c) ->
     ((proj_val__0 i) != none) ->
-    ((bytes_ t c) == (List.extract ((fun_mem z (.mk_uN 0)).BYTES) ((proj_uN_0 (Option.get! (proj_val__0 i))) + (proj_uN_0 (ao.OFFSET))) (Int.toNat (Rat.floor (((size t) : Rat) / (8 : Rat)))))) ->
+    ((bytes_ t c) == (List.extract ((fun_mem z (.mk_uN 0)).BYTES) ((proj_uN_0 (Option.get! (proj_val__0 i))) + (proj_uN_0 (ao.OFFSET))) (((proj_uN_0 (Option.get! (proj_val__0 i))) + (proj_uN_0 (ao.OFFSET))) + (Int.toNat (Rat.floor (((size t) : Rat) / (8 : Rat))))))) ->
     Step_read (.mk_config z [(.CONST .I32 i), (.LOAD t none ao)]) [(.CONST t c)]
   | load_pack_trap : forall (z : state) (i : val_) (v_Inn : Inn) (v_n : n) (v_sx : sx) (ao : memarg), 
     (wf_val_ .I32 i) ->
@@ -3047,7 +3047,7 @@ inductive Step_read : config -> (List admininstr) -> Prop where
   | load_pack_val : forall (z : state) (i : val_) (v_Inn : Inn) (v_n : n) (v_sx : sx) (ao : memarg) (c : iN), 
     (wf_val_ .I32 i) ->
     ((proj_val__0 i) != none) ->
-    ((ibytes_ v_n c) == (List.extract ((fun_mem z (.mk_uN 0)).BYTES) ((proj_uN_0 (Option.get! (proj_val__0 i))) + (proj_uN_0 (ao.OFFSET))) (Int.toNat (Rat.floor ((v_n : Rat) / (8 : Rat)))))) ->
+    ((ibytes_ v_n c) == (List.extract ((fun_mem z (.mk_uN 0)).BYTES) ((proj_uN_0 (Option.get! (proj_val__0 i))) + (proj_uN_0 (ao.OFFSET))) (((proj_uN_0 (Option.get! (proj_val__0 i))) + (proj_uN_0 (ao.OFFSET))) + (Int.toNat (Rat.floor ((v_n : Rat) / (8 : Rat))))))) ->
     Step_read (.mk_config z [(.CONST .I32 i), (.LOAD (valtype_Inn v_Inn) (some (.mk_loadop__0 v_Inn (.mk_loadop_Inn (.mk_sz v_n) v_sx))) ao)]) [(.CONST (valtype_Inn v_Inn) (.mk_val__0 v_Inn (extend__ v_n (size (valtype_Inn v_Inn)) v_sx c)))]
   | memory_size : forall (z : state) (v_n : n), 
     (((v_n * 64) * (Ki )) == (List.length ((fun_mem z (.mk_uN 0)).BYTES))) ->

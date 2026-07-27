@@ -350,7 +350,10 @@ and render_exp exp_type exp =
   | CatE ({it = ListE [e1]; _}, e2) when exp_type = LHS -> parens (r_func e1 ^ " :: " ^ r_func e2) 
   | CatE (e1, e2) -> parens (r_func e1 ^ " ++ " ^ r_func e2)
   | IdxE (e1, e2) -> parens (r_func e1 ^ "[" ^ r_func e2 ^ "]!")
-  | SliceE (e1, e2, e3) -> parens ("List.extract " ^ r_func e1 ^ " " ^ r_func e2 ^ " " ^ r_func e3)
+  | SliceE (e1, e2, e3) ->
+    let start = r_func e2 in
+    let stop = parens (start ^ " + " ^ r_func e3) in
+    parens ("List.extract " ^ r_func e1 ^ " " ^ start ^ " " ^ stop)
   | UpdE (e1, p, e2) -> render_path_start p e1 false e2
   | ExtE (e1, p, e2) -> render_path_start p e1 true e2
   | CallE (id, args) -> parens (render_id id.it ^ " " ^ String.concat " " (List.map (render_arg exp_type) args))
