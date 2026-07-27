@@ -1,6 +1,5 @@
 open Il.Ast
 open Util.Source
-open Il.Walk
 
 module StringSet = Set.Make(String)
 module StringMap = Map.Make(String)
@@ -643,89 +642,7 @@ let group_clauses_by_same_args clauses =
   in
   List.fold_left group_helper [] clauses |> List.rev
 
-let rec is_irrefutable_exp exp =
-  match exp.it with
-  | VarE _ -> true
-  | TupE exps -> List.for_all is_irrefutable_exp exps
-  | IterE (exp, (_, [])) -> is_irrefutable_exp exp
-  | _ -> false
-
-let is_irrefutable_arg arg =
-  match arg.it with
-  | ExpA exp -> is_irrefutable_exp exp
-  | TypA _ | DefA _ -> true
-  | GramA _ -> false
-
-let has_catchall_clause clauses =
-  List.exists (fun clause ->
-    match clause.it with
-    | DefD (_, args, _, _) -> List.for_all is_irrefutable_arg args
-  ) clauses
-
-(* These Wasm 1.0 helpers are intentionally partial in the authoritative
-   specification. The totalization pass turns them into Option-valued functions
-   when hint(partial) is present. Refuse to invent a fallback when translating a
-   modified input that has lost that hint. *)
-let wasm1_partial_helpers = ["opt_"; "signif"; "expon"]
-
-(* Some Wasm 1.0 worktrees have lost the partial hints for these helpers.  Do
-   the same Option-valued totalization as the middle-end pass, but only for the
-   affected declarations, so the backend does not require source edits. *)
-let recover_wasm1_partial_helpers defs =
-  let rec collect recovered def =
-    match def.it with
-    | DecD (id, _, _, clauses)
-      when List.mem id.it wasm1_partial_helpers && not (has_catchall_clause clauses) ->
-      StringSet.add id.it recovered
-    | RecD nested -> List.fold_left collect recovered nested
-    | _ -> recovered
-  in
-  let recovered = List.fold_left collect StringSet.empty defs in
-  if StringSet.is_empty recovered then defs else
-  let transform_exp exp =
-    match exp.it with
-    | CallE (id, _) when StringSet.mem id.it recovered ->
-      let optional_note = IterT (exp.note, Opt) $ exp.at in
-      {exp with it = TheE {exp with note = optional_note}}
-    | _ -> exp
-  in
-  let transformer = {base_transformer with transform_exp} in
-  let rec transform_def_local def =
-    match def.it with
-    | RecD nested -> RecD (List.map transform_def_local nested) $ def.at
-    | DecD (id, params, typ, clauses) when StringSet.mem id.it recovered ->
-      let params' = List.map (transform_param transformer) params in
-      let typ' = transform_typ transformer typ in
-      let optional_typ = IterT (typ', Opt) $ def.at in
-      let clauses' = List.map (fun clause ->
-        match (transform_clause transformer clause).it with
-        | DefD (binds, args, rhs, prems) ->
-          DefD (binds, args, OptE (Some rhs) $$ rhs.at % optional_typ, prems) $ clause.at
-      ) clauses in
-      let catchall_binds, catchall_args =
-        List.mapi (fun index param ->
-          match param.it with
-          | ExpP (_, param_typ) ->
-            let id = ("partial_arg_" ^ string_of_int index) $ def.at in
-            [ExpB (id, param_typ) $ def.at],
-            ExpA (VarE id $$ def.at % param_typ) $ def.at
-          | TypP id -> [TypB id $ def.at], TypA (VarT (id, []) $ def.at) $ def.at
-          | DefP (id, _, _) -> [], DefA id $ def.at
-          | GramP (id, _) -> [], GramA (VarG (id, []) $ def.at) $ def.at
-        ) params' |> List.split
-      in
-      let catchall =
-        DefD (List.concat catchall_binds, catchall_args,
-          OptE None $$ def.at % optional_typ, []) $ def.at
-      in
-      DecD (id, params', optional_typ, clauses' @ [catchall]) $ def.at
-    | _ -> transform_def transformer def
-  in
-  List.map transform_def_local defs
-
 let render_function_def id params r_typ clauses = 
-  if List.mem id wasm1_partial_helpers && not (has_catchall_clause clauses) then
-    error r_typ.at ("Failed to recover partial Wasm 1.0 definition `" ^ id ^ "`");
   let groups = group_clauses_by_same_args clauses in
   "def " ^ render_id id ^ " : ∀ " ^ render_params params ^ " , " ^ render_type RHS r_typ ^ "\n" ^
   String.concat "\n" (List.map (fun group -> match (List.hd group).it with
@@ -1331,7 +1248,6 @@ let render_preservation_laws defs =
     "variable [SpectecBuiltinLaws]\n\n" ^ accessors
   
 let string_of_script (il : script) =
-  let il = recover_wasm1_partial_helpers il in
   register_backend_hints il;
   env_ref := Il.Env.env_of_script il;
   let valid_defs = List.filter is_valid_def il in

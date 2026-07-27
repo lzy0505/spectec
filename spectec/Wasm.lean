@@ -862,13 +862,13 @@ def min : ∀  (nat : Nat) (nat_0 : Nat) , Nat
     (if (i <= j) then i else j)
 
 
-/- Auxiliary Definition at: _specification/wasm-1.0/0-aux.spectec:32.1-32.44 -/
+/- Auxiliary Definition at: _specification/wasm-1.0/0-aux.spectec:32.1-32.58 -/
 def opt_ : ∀  (X : Type) (var_0 : (List X)) , (Option (Option X))
   | X, [] =>
     (some none)
   | X, [w] =>
     (some (some w))
-  | X, partial_arg_1 =>
+  | X, x1 =>
     none
 
 
@@ -907,36 +907,24 @@ def proj_sN_0 : ∀  (x : sN) , Int
     (v_num_0)
 
 
-/- Auxiliary Definition at: _specification/wasm-1.0/1-syntax.spectec:36.1-36.21 -/
+/- Auxiliary Definition at: _specification/wasm-1.0/1-syntax.spectec:36.1-36.35 -/
 def signif : ∀  (v_N : N) , (Option Nat)
   | 32 =>
     (some 23)
   | 64 =>
     (some 52)
-  | partial_arg_0 =>
+  | x0 =>
     none
 
 
-/- Auxiliary Definition at: _specification/wasm-1.0/1-syntax.spectec:40.1-40.20 -/
+/- Auxiliary Definition at: _specification/wasm-1.0/1-syntax.spectec:40.1-40.34 -/
 def expon : ∀  (v_N : N) , (Option Nat)
   | 32 =>
     (some 8)
   | 64 =>
     (some 11)
-  | partial_arg_0 =>
+  | x0 =>
     none
-
-
-/- Auxiliary Definition at: _specification/wasm-1.0/1-syntax.spectec:44.1-44.30 -/
-def fun_M : ∀  (v_N : N) , Nat
-  | v_N =>
-    (Option.get! (signif v_N))
-
-
-/- Auxiliary Definition at: _specification/wasm-1.0/1-syntax.spectec:47.1-47.30 -/
-def E : ∀  (v_N : N) , Nat
-  | v_N =>
-    (Option.get! (expon v_N))
 
 
 /- Auxiliary Definition at: _specification/wasm-1.0/1-syntax.spectec:64.1-64.39 -/
@@ -949,12 +937,6 @@ def fzero : ∀  (v_N : N) , fN
 def fone : ∀  (v_N : N) , fN
   | v_N =>
     (.POS (.NORM 1 (Int.ofNat 0)))
-
-
-/- Auxiliary Definition at: _specification/wasm-1.0/1-syntax.spectec:70.1-70.21 -/
-def canon_ : ∀  (v_N : N) , Nat
-  | v_N =>
-    (2 ^ (Int.toNat ((Int.ofNat (Option.get! (signif v_N))) - (Int.ofNat 1))))
 
 
 /- Auxiliary Definition at: _specification/wasm-1.0/1-syntax.spectec:78.1-78.85 -/
@@ -1373,17 +1355,34 @@ inductive wf_sN : N -> sN -> Prop where
     ((((i >= (0 - (Int.ofNat (2 ^ (Int.toNat ((Int.ofNat v_N) - (Int.ofNat 1))))))) && (i <= (0 - (Int.ofNat 1)))) || (i == (Int.ofNat 0))) || ((i >= ((Int.ofNat 1))) && (i <= ((Int.ofNat (2 ^ (Int.toNat ((Int.ofNat v_N) - (Int.ofNat 1))))) - (Int.ofNat 1))))) ->
     wf_sN v_N (.mk_sN i)
 
+/- Inductive Relations Definition at: _specification/wasm-1.0/1-syntax.spectec:44.6-44.8 -/
+inductive fun_M : N -> Nat -> Prop where
+  | fun_M_case_0 : forall (v_N : Nat), 
+    ((signif v_N) != none) ->
+    fun_M v_N (Option.get! (signif v_N))
+
+/- Inductive Relations Definition at: _specification/wasm-1.0/1-syntax.spectec:47.6-47.8 -/
+inductive fun_E : N -> Nat -> Prop where
+  | fun_E_case_0 : forall (v_N : Nat), 
+    ((expon v_N) != none) ->
+    fun_E v_N (Option.get! (expon v_N))
+
 /- Inductive Relations Definition at: _specification/wasm-1.0/1-syntax.spectec:55.8-55.14 -/
 inductive wf_fNmag : N -> fNmag -> Prop where
-  | fNmag_case_0 : forall (v_N : N) (v_m : m) (v_exp : exp), 
-    ((v_m < (2 ^ (fun_M v_N))) && ((((Int.ofNat 2) - (Int.ofNat (2 ^ (Int.toNat ((Int.ofNat (E v_N)) - (Int.ofNat 1)))))) <= v_exp) && (v_exp <= ((Int.ofNat (2 ^ (Int.toNat ((Int.ofNat (E v_N)) - (Int.ofNat 1))))) - (Int.ofNat 1))))) ->
+  | fNmag_case_0 : forall (v_N : N) (v_m : m) (v_exp : exp) (var_1 : Nat) (var_0 : Nat), 
+    (fun_E v_N var_1) ->
+    (fun_M v_N var_0) ->
+    ((v_m < (2 ^ var_0)) && ((((Int.ofNat 2) - (Int.ofNat (2 ^ (Int.toNat ((Int.ofNat var_1) - (Int.ofNat 1)))))) <= v_exp) && (v_exp <= ((Int.ofNat (2 ^ (Int.toNat ((Int.ofNat var_1) - (Int.ofNat 1))))) - (Int.ofNat 1))))) ->
     wf_fNmag v_N (.NORM v_m v_exp)
-  | fNmag_case_1 : forall (v_N : N) (v_m : m) (v_exp : exp), 
-    ((v_m < (2 ^ (fun_M v_N))) && (((Int.ofNat 2) - (Int.ofNat (2 ^ (Int.toNat ((Int.ofNat (E v_N)) - (Int.ofNat 1)))))) == v_exp)) ->
+  | fNmag_case_1 : forall (v_N : N) (v_m : m) (v_exp : exp) (var_1 : Nat) (var_0 : Nat), 
+    (fun_E v_N var_1) ->
+    (fun_M v_N var_0) ->
+    ((v_m < (2 ^ var_0)) && (((Int.ofNat 2) - (Int.ofNat (2 ^ (Int.toNat ((Int.ofNat var_1) - (Int.ofNat 1)))))) == v_exp)) ->
     wf_fNmag v_N (.SUBNORM v_m)
   | fNmag_case_2 : forall (v_N : N), wf_fNmag v_N .INF
-  | fNmag_case_3 : forall (v_N : N) (v_m : m), 
-    ((1 <= v_m) && (v_m < (2 ^ (fun_M v_N)))) ->
+  | fNmag_case_3 : forall (v_N : N) (v_m : m) (var_0 : Nat), 
+    (fun_M v_N var_0) ->
+    ((1 <= v_m) && (v_m < (2 ^ var_0))) ->
     wf_fNmag v_N (.NAN v_m)
 
 /- Inductive Relations Definition at: _specification/wasm-1.0/1-syntax.spectec:50.8-50.11 -/
@@ -1394,6 +1393,12 @@ inductive wf_fN : N -> fN -> Prop where
   | fN_case_1 : forall (v_N : N) (v_fNmag : fNmag), 
     (wf_fNmag v_N v_fNmag) ->
     wf_fN v_N (.NEG v_fNmag)
+
+/- Inductive Relations Definition at: _specification/wasm-1.0/1-syntax.spectec:70.6-70.13 -/
+inductive fun_canon_ : N -> Nat -> Prop where
+  | fun_canon__case_0 : forall (v_N : Nat), 
+    ((signif v_N) != none) ->
+    fun_canon_ v_N (2 ^ (Int.toNat ((Int.ofNat (Option.get! (signif v_N))) - (Int.ofNat 1))))
 
 /- Inductive Relations Definition at: _specification/wasm-1.0/1-syntax.spectec:78.8-78.12 -/
 inductive wf_char : char -> Prop where
@@ -2732,7 +2737,9 @@ inductive Step_pure : (List admininstr) -> (List admininstr) -> Prop where
     ((proj_uN_0 (Option.get! (proj_val__0 c))) == 0) ->
     Step_pure [(.CONST .I32 c), (.IFELSE t_opt instr_1_lst instr_2_lst)] [(.BLOCK t_opt instr_2_lst)]
   | label_vals : forall (v_n : n) (instr_lst : (List instr)) (val_lst : (List val)), Step_pure [(.LABEL_ v_n instr_lst (List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst))] (List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst)
-  | br_zero : forall (v_n : n) (instr'_lst : (List instr)) (val'_lst : (List val)) (val_lst : (List val)) (instr_lst : (List instr)), Step_pure [(.LABEL_ v_n instr'_lst ((List.map (fun (val' : val) => (admininstr_val val')) val'_lst) ++ ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ ([(.BR (.mk_uN 0))] ++ (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst)))))] ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ (List.map (fun (instr' : instr) => (admininstr_instr instr')) instr'_lst))
+  | br_zero : forall (v_n : n) (instr'_lst : (List instr)) (val'_lst : (List val)) (val_lst : (List val)) (instr_lst : (List instr)), 
+    ((List.length val_lst) == v_n) ->
+    Step_pure [(.LABEL_ v_n instr'_lst ((List.map (fun (val' : val) => (admininstr_val val')) val'_lst) ++ ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ ([(.BR (.mk_uN 0))] ++ (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst)))))] ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ (List.map (fun (instr' : instr) => (admininstr_instr instr')) instr'_lst))
   | br_succ : forall (v_n : n) (instr'_lst : (List instr)) (val_lst : (List val)) (l : labelidx) (instr_lst : (List instr)), Step_pure [(.LABEL_ v_n instr'_lst ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ ([(.BR (.mk_uN ((proj_uN_0 l) + 1)))] ++ (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst))))] ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ [(.BR l)])
   | br_if_true : forall (c : val_) (l : labelidx), 
     (wf_val_ .I32 c) ->
@@ -2754,8 +2761,12 @@ inductive Step_pure : (List admininstr) -> (List admininstr) -> Prop where
     ((proj_val__0 i) != none) ->
     ((proj_uN_0 (Option.get! (proj_val__0 i))) >= (List.length l_lst)) ->
     Step_pure [(.CONST .I32 i), (.BR_TABLE l_lst l')] [(.BR l')]
-  | frame_vals : forall (v_n : n) (f : frame) (val_lst : (List val)), Step_pure [(.FRAME_ v_n f (List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst))] (List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst)
-  | return_frame : forall (v_n : n) (f : frame) (val'_lst : (List val)) (val_lst : (List val)) (instr_lst : (List instr)), Step_pure [(.FRAME_ v_n f ((List.map (fun (val' : val) => (admininstr_val val')) val'_lst) ++ ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ ([.RETURN] ++ (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst)))))] (List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst)
+  | frame_vals : forall (v_n : n) (f : frame) (val_lst : (List val)), 
+    ((List.length val_lst) == v_n) ->
+    Step_pure [(.FRAME_ v_n f (List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst))] (List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst)
+  | return_frame : forall (v_n : n) (f : frame) (val'_lst : (List val)) (val_lst : (List val)) (instr_lst : (List instr)), 
+    ((List.length val_lst) == v_n) ->
+    Step_pure [(.FRAME_ v_n f ((List.map (fun (val' : val) => (admininstr_val val')) val'_lst) ++ ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ ([.RETURN] ++ (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst)))))] (List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst)
   | return_label : forall (v_n : n) (instr'_lst : (List instr)) (val_lst : (List val)) (instr_lst : (List instr)), Step_pure [(.LABEL_ v_n instr'_lst ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ ([.RETURN] ++ (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst))))] ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ [.RETURN])
   | trap_vals : forall (val_lst : (List val)) (instr_lst : (List instr)), 
     ((val_lst != []) || (instr_lst != [])) ->
@@ -2843,7 +2854,10 @@ inductive Step_read : config -> (List admininstr) -> Prop where
     ((fun (spectec_otherwise_subject : config) => ¬ ((∃ (z : state) (t_opt : (Option valtype)) (instr_lst : (List instr)) (v_n : n), ((.mk_config z [(.BLOCK t_opt instr_lst)]) = spectec_otherwise_subject ∧ (((t_opt == none) && (v_n == 0)) || ((t_opt != none) && (v_n == 1))))) ∨ (∃ (z : state) (t_opt : (Option valtype)) (instr_lst : (List instr)), ((.mk_config z [(.LOOP t_opt instr_lst)]) = spectec_otherwise_subject)) ∨ (∃ (z : state) (x : idx), ((.mk_config z [(.CALL x)]) = spectec_otherwise_subject ∧ ((proj_uN_0 x) < (List.length (fun_funcaddr z))))) ∨ (∃ (z : state) (i : val_) (x : idx) (a : addr), ((.mk_config z [(.CONST .I32 i), (.CALL_INDIRECT x)]) = spectec_otherwise_subject ∧ (wf_val_ .I32 i) ∧ ((proj_uN_0 (Option.get! (proj_val__0 i))) < (List.length ((fun_table z (.mk_uN 0)).REFS))) ∧ ((proj_val__0 i) != none) ∧ ((((fun_table z (.mk_uN 0)).REFS)[(proj_uN_0 (Option.get! (proj_val__0 i)))]!) == (some a)) ∧ (a < (List.length (fun_funcinst z))) ∧ ((fun_type z x) == (((fun_funcinst z)[a]!).TYPE)))))) (.mk_config z [(.CONST .I32 i), (.CALL_INDIRECT x)])) ->
     Step_read (.mk_config z [(.CONST .I32 i), (.CALL_INDIRECT x)]) [.TRAP]
   | call_addr : forall (z : state) (val_lst : (List val)) (k : Nat) (a : addr) (v_n : n) (f : frame) (instr_lst : (List instr)) (t_1_lst : (List valtype)) (t_2_lst : (List valtype)) (mm : moduleinst) (v_func : func) (x : idx) (t_lst : (List valtype)), 
+    ((List.length val_lst) == k) ->
     (a < (List.length (fun_funcinst z))) ->
+    ((List.length t_1_lst) == k) ->
+    ((List.length t_2_lst) == v_n) ->
     (((fun_funcinst z)[a]!) == { TYPE := (.mk_functype t_1_lst t_2_lst), MODULE := mm, CODE := v_func }) ->
     (v_func == (.FUNC x (List.map (fun (t : valtype) => (.LOCAL t)) t_lst) instr_lst)) ->
     (f == { LOCALS := (val_lst ++ (List.map (fun (t : valtype) => (default_ t)) t_lst)), MODULE := mm }) ->
@@ -2877,18 +2891,22 @@ inductive Step_read : config -> (List admininstr) -> Prop where
 
 /- Inductive Relations Definition at: _specification/wasm-1.0/8-reduction.spectec:5.1-5.77 -/
 inductive Step : config -> config -> Prop where
-  | pure : forall (z : state) (instr_lst : (List instr)) (instr'_lst : (List instr)), 
-    (Step_pure (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst) (List.map (fun (instr' : instr) => (admininstr_instr instr')) instr'_lst)) ->
-    Step (.mk_config z (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst)) (.mk_config z (List.map (fun (instr' : instr) => (admininstr_instr instr')) instr'_lst))
-  | read : forall (z : state) (instr_lst : (List instr)) (instr'_lst : (List instr)), 
-    (Step_read (.mk_config z (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst)) (List.map (fun (instr' : instr) => (admininstr_instr instr')) instr'_lst)) ->
-    Step (.mk_config z (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst)) (.mk_config z (List.map (fun (instr' : instr) => (admininstr_instr instr')) instr'_lst))
-  | ctxt_label : forall (z : state) (v_n : n) (instr_0_lst : (List instr)) (instr_lst : (List instr)) (z' : state) (instr'_lst : (List instr)), 
-    (Step (.mk_config z (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst)) (.mk_config z' (List.map (fun (instr' : instr) => (admininstr_instr instr')) instr'_lst))) ->
-    Step (.mk_config z [(.LABEL_ v_n instr_0_lst (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst))]) (.mk_config z' [(.LABEL_ v_n instr_0_lst (List.map (fun (instr' : instr) => (admininstr_instr instr')) instr'_lst))])
-  | ctxt_frame : forall (s : store) (f : frame) (v_n : n) (f' : frame) (instr_lst : (List instr)) (s' : store) (instr'_lst : (List instr)), 
-    (Step (.mk_config (.mk_state s f') (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst)) (.mk_config (.mk_state s' f') (List.map (fun (instr' : instr) => (admininstr_instr instr')) instr'_lst))) ->
-    Step (.mk_config (.mk_state s f) [(.FRAME_ v_n f' (List.map (fun (v_instr : instr) => (admininstr_instr v_instr)) instr_lst))]) (.mk_config (.mk_state s' f) [(.FRAME_ v_n f' (List.map (fun (instr' : instr) => (admininstr_instr instr')) instr'_lst))])
+  | pure : forall (z : state) (admininstr_lst : (List admininstr)) (admininstr'_lst : (List admininstr)), 
+    (Step_pure admininstr_lst admininstr'_lst) ->
+    Step (.mk_config z admininstr_lst) (.mk_config z admininstr'_lst)
+  | read : forall (z : state) (admininstr_lst : (List admininstr)) (admininstr'_lst : (List admininstr)), 
+    (Step_read (.mk_config z admininstr_lst) admininstr'_lst) ->
+    Step (.mk_config z admininstr_lst) (.mk_config z admininstr'_lst)
+  | ctxt_label : forall (z : state) (v_n : n) (instr_0_lst : (List instr)) (admininstr_lst : (List admininstr)) (z' : state) (admininstr'_lst : (List admininstr)), 
+    (Step (.mk_config z admininstr_lst) (.mk_config z' admininstr'_lst)) ->
+    Step (.mk_config z [(.LABEL_ v_n instr_0_lst admininstr_lst)]) (.mk_config z' [(.LABEL_ v_n instr_0_lst admininstr'_lst)])
+  | ctxt_frame : forall (s : store) (f : frame) (v_n : n) (f' : frame) (admininstr_lst : (List admininstr)) (s' : store) (f'' : frame) (admininstr'_lst : (List admininstr)), 
+    (Step (.mk_config (.mk_state s f') admininstr_lst) (.mk_config (.mk_state s' f'') admininstr'_lst)) ->
+    Step (.mk_config (.mk_state s f) [(.FRAME_ v_n f' admininstr_lst)]) (.mk_config (.mk_state s' f) [(.FRAME_ v_n f'' admininstr'_lst)])
+  | ctxt_instrs : forall (z : state) (val_lst : (List val)) (admininstr_lst : (List admininstr)) (admininstr_1_lst : (List admininstr)) (z' : state) (admininstr'_lst : (List admininstr)), 
+    (Step (.mk_config z admininstr_lst) (.mk_config z' admininstr'_lst)) ->
+    ((val_lst != []) || (admininstr_1_lst != [])) ->
+    Step (.mk_config z ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ (admininstr_lst ++ admininstr_1_lst))) (.mk_config z' ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ (admininstr'_lst ++ admininstr_1_lst)))
   | local_set : forall (z : state) (v_val : val) (x : idx), Step (.mk_config z [(admininstr_val v_val), (.LOCAL_SET x)]) (.mk_config (with_local z x v_val) [])
   | global_set : forall (z : state) (v_val : val) (x : idx), Step (.mk_config z [(admininstr_val v_val), (.GLOBAL_SET x)]) (.mk_config (with_global z x v_val) [])
   | store_num_trap : forall (z : state) (i : val_) (t : valtype) (c : val_) (ao : memarg), 
@@ -3048,22 +3066,31 @@ inductive fun_allocmems : store -> (List memtype) -> store × (List memaddr) -> 
 /- Inductive Relations Definition at: _specification/wasm-1.0/9-module.spectec:87.6-87.18 -/
 inductive fun_allocmodule : store -> module -> (List externaddr) -> (List val) -> store × moduleinst -> Prop where
   | fun_allocmodule_case_0 : forall (s : store) (v_module : module) (externaddr_lst : (List externaddr)) (val_lst : (List val)) (s_4 : store) (v_moduleinst : moduleinst) (ft_lst : (List functype)) (import_lst : (List «import»)) (func_lst : (List func)) (n_func : Nat) (globaltype_lst : (List globaltype)) (expr_1_lst : (List expr)) (n_global : Nat) (tabletype_lst : (List tabletype)) (n_table : Nat) (memtype_lst : (List memtype)) (n_mem : Nat) (elem_lst : (List elem)) (data_lst : (List data)) (start_opt : (Option start)) (export_lst : (List «export»)) (fa_ex_lst : (List funcaddr)) (ga_ex_lst : (List globaladdr)) (ta_ex_lst : (List tableaddr)) (ma_ex_lst : (List memaddr)) (fa_lst : (List funcaddr)) (i_func_lst : (List Nat)) (ga_lst : (List globaladdr)) (i_global_lst : (List Nat)) (ta_lst : (List tableaddr)) (i_table_lst : (List Nat)) (ma_lst : (List memaddr)) (i_mem_lst : (List Nat)) (xi_lst : (List exportinst)) (s_1 : store) (s_2 : store) (s_3 : store) (var_7 : store × (List memaddr)) (var_6 : store × (List tableaddr)) (var_5 : store × (List globaladdr)) (var_4 : store × (List funcaddr)) (var_3 : (List memaddr)) (var_2 : (List tableaddr)) (var_1 : (List globaladdr)) (var_0 : (List funcaddr)), 
+    ((List.length memtype_lst) == n_mem) ->
     (fun_allocmems s_3 memtype_lst var_7) ->
+    ((List.length tabletype_lst) == n_table) ->
     (fun_alloctables s_2 tabletype_lst var_6) ->
+    ((List.length globaltype_lst) == n_global) ->
     (fun_allocglobals s_1 globaltype_lst val_lst var_5) ->
+    ((List.length func_lst) == n_func) ->
     (fun_allocfuncs s v_moduleinst func_lst var_4) ->
     (fun_mems externaddr_lst var_3) ->
     (fun_tables externaddr_lst var_2) ->
     (fun_globals externaddr_lst var_1) ->
     (fun_funcs externaddr_lst var_0) ->
+    ((List.length expr_1_lst) == n_global) ->
     (v_module == (.MODULE (List.map (fun (ft : functype) => (.TYPE ft)) ft_lst) import_lst func_lst (List.zipWith (fun (expr_1 : expr) (v_globaltype : globaltype) => (.GLOBAL v_globaltype expr_1)) expr_1_lst globaltype_lst) (List.map (fun (v_tabletype : tabletype) => (.TABLE v_tabletype)) tabletype_lst) (List.map (fun (v_memtype : memtype) => (.MEMORY v_memtype)) memtype_lst) elem_lst data_lst start_opt export_lst)) ->
     (fa_ex_lst == var_0) ->
     (ga_ex_lst == var_1) ->
     (ta_ex_lst == var_2) ->
     (ma_ex_lst == var_3) ->
+    ((List.length i_func_lst) == n_func) ->
     (fa_lst == (List.map (fun (i_func : Nat) => ((List.length (s.FUNCS)) + i_func)) i_func_lst)) ->
+    ((List.length i_global_lst) == n_global) ->
     (ga_lst == (List.map (fun (i_global : Nat) => ((List.length (s.GLOBALS)) + i_global)) i_global_lst)) ->
+    ((List.length i_table_lst) == n_table) ->
     (ta_lst == (List.map (fun (i_table : Nat) => ((List.length (s.TABLES)) + i_table)) i_table_lst)) ->
+    ((List.length i_mem_lst) == n_mem) ->
     (ma_lst == (List.map (fun (i_mem : Nat) => ((List.length (s.MEMS)) + i_mem)) i_mem_lst)) ->
     (xi_lst == (List.map (fun (v_export : «export») => (instexport (fa_ex_lst ++ fa_lst) (ga_ex_lst ++ ga_lst) (ta_ex_lst ++ ta_lst) (ma_ex_lst ++ ma_lst) v_export)) export_lst)) ->
     (v_moduleinst == { TYPES := ft_lst, FUNCS := (fa_ex_lst ++ fa_lst), GLOBALS := (ga_ex_lst ++ ga_lst), TABLES := (ta_ex_lst ++ ta_lst), MEMS := (ma_ex_lst ++ ma_lst), EXPORTS := xi_lst }) ->
@@ -3113,6 +3140,7 @@ inductive fun_instantiate : store -> module -> (List externaddr) -> config -> Pr
     (data_lst == (List.zipWith (fun (b_lst : (List byte)) (expr_D : expr) => (.DATA expr_D b_lst)) b_lst_lst expr_D_lst)) ->
     (start_opt == (Option.map (fun (x' : idx) => (.START x')) x'_opt)) ->
     (n_F == (List.length func_lst)) ->
+    ((List.length i_F_lst) == n_F) ->
     (moduleinst_init == { TYPES := functype_lst, FUNCS := (var_0 ++ (List.map (fun (i_F : Nat) => ((List.length (s.FUNCS)) + i_F)) i_F_lst)), GLOBALS := var_1, TABLES := [], MEMS := [], EXPORTS := [] }) ->
     (f_init == { LOCALS := [], MODULE := moduleinst_init }) ->
     (z == (.mk_state s f_init)) ->
@@ -3131,8 +3159,10 @@ inductive fun_instantiate : store -> module -> (List externaddr) -> config -> Pr
 /- Inductive Relations Definition at: _specification/wasm-1.0/9-module.spectec:169.6-169.13 -/
 inductive fun_invoke : store -> funcaddr -> (List val) -> config -> Prop where
   | fun_invoke_case_0 : forall (s : store) (fa : Nat) (val_lst : (List val)) (v_n : Nat) (f : frame) (t_1_lst : (List valtype)) (t_2_lst : (List valtype)), 
+    ((List.length val_lst) == v_n) ->
     (f == { LOCALS := [], MODULE := { TYPES := [], FUNCS := [], GLOBALS := [], TABLES := [], MEMS := [], EXPORTS := [] } }) ->
     (fa < (List.length (fun_funcinst (.mk_state s f)))) ->
+    ((List.length t_1_lst) == v_n) ->
     ((((fun_funcinst (.mk_state s f))[fa]!).TYPE) == (.mk_functype t_1_lst t_2_lst)) ->
     fun_invoke s fa val_lst (.mk_config (.mk_state s f) ((List.map (fun (v_val : val) => (admininstr_val v_val)) val_lst) ++ [(.CALL_ADDR fa)]))
 

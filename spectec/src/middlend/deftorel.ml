@@ -16,13 +16,15 @@ end)
 type env = {
   mutable il_env : Il.Env.t;
   mutable rel_set : StringSet.t;
-  mutable def_arg_set : StringSet.t
+  mutable def_arg_set : StringSet.t;
+  mutable partial_set : StringSet.t
 }
 
 let empty_env = {
   il_env = Il.Env.empty;
   rel_set = StringSet.empty;
-  def_arg_set = StringSet.empty
+  def_arg_set = StringSet.empty;
+  partial_set = StringSet.empty
 }
 
 let fun_prefix = "fun_"
@@ -444,6 +446,12 @@ let utilizes_rel_def env e =
   | CallE (id, _) -> (StringSet.mem id.it env.rel_set, true)
   | _ -> (false, true)
 
+let projects_partial_def env e =
+  match e.it with
+  | TheE {it = CallE (id, _); _} ->
+    (StringSet.mem id.it env.partial_set, false)
+  | _ -> (false, true)
+
 let collect_list_length_vars () : StringSet.t ref * (module Iter.Arg) =
   let module Arg = 
     struct
@@ -460,6 +468,9 @@ let collect_list_length_vars () : StringSet.t ref * (module Iter.Arg) =
 let must_be_relation env id params clauses = 
   let listn_set, (module Arg : Iter.Arg) = collect_list_length_vars () in
   let rel_def_checker = { exists_base_checker with collect_exp = utilizes_rel_def env} in
+  let partial_def_checker =
+    { exists_base_checker with collect_exp = projects_partial_def env }
+  in
   assert (!listn_set = StringSet.empty);
   let module Acc = Iter.Make(Arg) in
   (* Current limitation of relations - can only have standard types. 
@@ -472,6 +483,10 @@ let must_be_relation env id params clauses =
     Acc.args args;
     (* Premises might not be decidable *)
     prems <> [] || 
+    (* Projecting a partial result requires a domain premise, which functions
+       cannot express without changing their source signature. *)
+    collect_exp partial_def_checker exp ||
+    List.exists (collect_prem partial_def_checker) prems ||
     (* Functions that have function calls transformed to relations must also be relations *)
     collect_exp rel_def_checker exp ||
     List.exists (collect_prem rel_def_checker) prems || 
@@ -641,6 +656,13 @@ let collect_def_args (): StringSet.t ref * (module Iter.Arg) =
 let transform (il : script): script =
   let env = empty_env in 
   env.il_env <- Il.Env.env_of_script il;
+  List.iter (fun def ->
+    match def.it with
+    | HintD {it = DecH (id, hints); _}
+      when List.exists (fun hint -> hint.hintid.it = "partial") hints ->
+      env.partial_set <- StringSet.add id.it env.partial_set
+    | _ -> ()
+  ) il;
   let acc, (module Arg : Iter.Arg) = collect_def_args () in
   let module Acc = Iter.Make(Arg) in
   List.iter Acc.def il;

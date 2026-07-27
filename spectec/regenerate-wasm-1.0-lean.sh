@@ -10,15 +10,18 @@ snapshot_dir="$repo_dir/specification/wasm-1.0"
 revision_file="$snapshot_dir/REVISION"
 updater="$repo_dir/specification/update-wasm-1.0.sh"
 update_snapshot=false
+local_sources=false
 
 work_dir=""
 output_tmp=""
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") [--update]
+Usage: $(basename "$0") [--local | --update]
 
-Generate Wasm.lean from the pinned specification/wasm-1.0 snapshot.
+Generate Wasm.lean from specification/wasm-1.0.
+By default, verify the files against the pinned REVISION first.
+With --local, use the current local files without checking REVISION.
 With --update, refresh and repin the snapshot before generating.
 EOF
 }
@@ -51,6 +54,10 @@ revision_value() {
 
 while (( $# > 0 )); do
   case "$1" in
+    --local)
+      local_sources=true
+      shift
+      ;;
     --update)
       update_snapshot=true
       shift
@@ -67,22 +74,33 @@ while (( $# > 0 )); do
   esac
 done
 
-require_command awk
 require_command lean
 require_command mktemp
 
-if [[ ! -x "$updater" ]]; then
-  echo "error: updater is not executable: $updater" >&2
+if $local_sources && $update_snapshot; then
+  echo "error: --local and --update cannot be used together" >&2
   exit 1
 fi
 
-if $update_snapshot; then
-  "$updater"
-fi
+if $local_sources; then
+  source_description="local specification/wasm-1.0"
+else
+  require_command awk
 
-"$updater" --verify --destination "$snapshot_dir"
-spec_commit="$(revision_value commit)"
-snapshot_sha256="$(revision_value sha256)"
+  if [[ ! -x "$updater" ]]; then
+    echo "error: updater is not executable: $updater" >&2
+    exit 1
+  fi
+
+  if $update_snapshot; then
+    "$updater"
+  fi
+
+  "$updater" --verify --destination "$snapshot_dir"
+  spec_commit="$(revision_value commit)"
+  snapshot_sha256="$(revision_value sha256)"
+  source_description="pinned WebAssembly/spec@$spec_commit"
+fi
 
 echo "Building the SpecTec Lean 4 generator..."
 if command -v opam >/dev/null 2>&1; then
@@ -101,13 +119,13 @@ work_dir="$(mktemp -d "${TMPDIR:-/tmp}/spectec-wasm-1.0.XXXXXX")"
 mkdir "$work_dir/_specification"
 ln -s "$snapshot_dir" "$work_dir/_specification/wasm-1.0"
 
-echo "Generating Wasm.lean from pinned WebAssembly/spec@$spec_commit..."
+echo "Generating Wasm.lean from $source_description..."
 (
   cd "$work_dir"
   shopt -s nullglob
   sources=(_specification/wasm-1.0/*.spectec)
   if (( ${#sources[@]} == 0 )); then
-    echo "error: pinned snapshot contains no Wasm 1.0 SpecTec sources" >&2
+    echo "error: specification/wasm-1.0 contains no SpecTec sources" >&2
     exit 1
   fi
   "$generator" "${sources[@]}" --lean4 -o Wasm.lean
@@ -120,5 +138,9 @@ mv -f -- "$output_tmp" "$output"
 output_tmp=""
 
 echo "Generated $output"
-echo "Source commit: $spec_commit"
-echo "Snapshot SHA-256: $snapshot_sha256"
+if $local_sources; then
+  echo "Source: local specification/wasm-1.0 (REVISION not checked)"
+else
+  echo "Source commit: $spec_commit"
+  echo "Snapshot SHA-256: $snapshot_sha256"
+fi
