@@ -1,0 +1,12 @@
+syntax atom = A
+syntax maybe = atom?
+syntax many = maybe*
+syntax record = {
+  ITEMS many
+}
+
+def $singleton(record) : record
+def $singleton({ITEMS (eps)}) = {ITEMS (eps)}
+
+def $empty(record) : record
+def $empty({ITEMS eps}) = {ITEMS eps}

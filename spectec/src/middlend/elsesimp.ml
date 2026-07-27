@@ -84,41 +84,36 @@ let get_exp prem =
 
 let is_wf_or_neg_prem else_ids env prem =
   match prem.it with
-  | RulePr (id, _, _, _) -> StringSet.mem id.it env.wf_relations
-  | NegPr { it = RulePr (id, _, _, _); _} -> List.mem id.it else_ids
+  | RulePr (id, _, _) -> StringSet.mem id.it env.wf_relations
+  | NegPr { it = RulePr (id, _, _); _} -> List.mem id.it else_ids
   | _ -> false
 
 let is_neg_prem else_ids prem = 
   match prem.it with
-  | NegPr { it = RulePr (id, _, _, _); _} -> List.mem id.it else_ids
+  | NegPr { it = RulePr (id, _, _); _} -> List.mem id.it else_ids
   | _ -> false
 
-let is_in_quant (free_sets : Free.sets) q = 
-  match q.it with
-  | ExpP (id, _) -> Free.Set.mem id.it free_sets.varid
-  | TypP id -> Free.Set.mem id.it free_sets.typid
-  | DefP (id, _, _) -> Free.Set.mem id.it free_sets.defid
-  | GramP (id, _, _) -> Free.Set.mem id.it free_sets.gramid
+let is_in_bind (free_sets : Free.sets) b = 
+  match b.it with
+  | ExpB (id, _) -> Free.Set.mem id.it free_sets.varid
+  | TypB id -> Free.Set.mem id.it free_sets.typid
+  | DefB (id, _, _) -> Free.Set.mem id.it free_sets.defid
+  | GramB (id, _, _) -> Free.Set.mem id.it free_sets.gramid
 
 let t_rule env else_ids rule = 
-  let RuleD (id, quants, m, exp, prems) = rule.it in
+  let RuleD (id, binds, m, exp, prems) = rule.it in
   let* else_id = List.find_opt (fun id -> List.exists (is_neg_prem [id]) prems) else_ids in
   let* else_relation = Il.Env.find_opt_rel env.il_env (else_id $ no_region) in
-  let (_, _, _, rules) = else_relation in
-  let free_vars_binds = Free.free_list Free.bound_quant quants in 
-  let free_vars_exp = Free.free_exp exp in
+  let (_, _, rules) = else_relation in
+  let free_vars_binds = Free.free_list Free.bound_bind binds in 
   let prems_list, binds' = List.map (fun r ->
-    let RuleD (_, quants', _, _, prems') = r.it in
+    let RuleD (_, binds', _, _, prems') = r.it in
     let free_vars = Free.diff (Free.free_list Free.free_prem prems') free_vars_binds in 
-    Lib.List.filter_not (is_wf_or_neg_prem else_ids env) prems', List.filter (is_in_quant free_vars) quants'
+    Lib.List.filter_not (is_wf_or_neg_prem else_ids env) prems', List.filter (is_in_bind free_vars) binds'
   ) rules |> List.split in
-  let quants' = List.concat binds' in
+  let binds' = List.concat binds' in
   
-  (* First check that there are indeed premises, and that they are all boolean premises *)
   if prems_list = [] || not (List.for_all (fun prems' -> List.for_all is_boolean_prem prems') prems_list) then None else
-  (* Then check that the quants actually appear in the conclusion (If they don't, then quantification changes!) *)
-  if not (List.for_all (is_in_quant free_vars_exp) quants') then None else
-  
   let neg_exps = List.filter_map (fun prems' -> 
     let exps = List.filter_map get_exp prems' in
     match exps with 
@@ -128,14 +123,14 @@ let t_rule env else_ids rule =
   ) prems_list in
   let new_prems = List.map (fun e -> IfPr e $ e.at) neg_exps in
   bind_else_set env else_id;
-  Some { rule with it = RuleD (id, quants @ quants', m, exp, new_prems @ Lib.List.filter_not (is_neg_prem else_ids) prems) }
+  Some { rule with it = RuleD (id, binds @ binds', m, exp, new_prems @ Lib.List.filter_not (is_neg_prem else_ids) prems) }
 
 let rec t_def env d = 
   {d with it = 
   match d.it with
-  | RelD (id, qs, m, typ, rules) when StringMap.mem id.it env.rel_to_else_map -> 
+  | RelD (id, m, typ, rules) when StringMap.mem id.it env.rel_to_else_map -> 
     let else_ids = StringMap.find id.it env.rel_to_else_map in
-    RelD (id, qs, m, typ, List.map (fun r -> match (t_rule env else_ids r) with
+    RelD (id, m, typ, List.map (fun r -> match (t_rule env else_ids r) with
       | None -> r
       | Some r' -> r'
     ) rules)
@@ -145,7 +140,7 @@ let rec t_def env d =
 
 let is_part_of_else_set env d = 
   match d.it with
-  | RelD (id, _, _, _, _) -> StringSet.mem id.it env.else_set_to_remove
+  | RelD (id, _, _, _) -> StringSet.mem id.it env.else_set_to_remove
   | _ -> false
 
 let filter_else_set env: (module Iter.Arg) =
@@ -154,7 +149,7 @@ let filter_else_set env: (module Iter.Arg) =
       include Iter.Skip 
       let visit_prem prem = 
         match prem.it with
-        | RulePr (id, _, _, _) when StringSet.mem id.it env.else_set_to_remove -> 
+        | RulePr (id, _, _) when StringSet.mem id.it env.else_set_to_remove -> 
           env.else_set_to_remove <- StringSet.remove id.it env.else_set_to_remove
         | _ -> ()
     end

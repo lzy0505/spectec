@@ -1,3 +1,14 @@
+(*
+This transformation removes use of the ! operator from relations, by
+introducing fresh variables.
+
+An occurrence of !(e) will be replaced with a fresh variable x of the suitable
+type (and dimension), and a new condition e = ?(x) is added.
+
+This is an alternative to to how the Sideconditions pass handles the ! operator.
+If you need both, passes, run this one first.
+*)
+
 open Util
 open Source
 open Il.Ast
@@ -8,7 +19,7 @@ let error at msg = Error.error at "option projection" msg
 
 (* We pull out fresh variables and equating side conditions. *)
 
-type eqn = param * prem
+type eqn = bind * prem
 type eqns = eqn list
 
 (* Fresh name generation *)
@@ -31,19 +42,19 @@ let update_iterexp_vars (sets : Il.Free.sets) ((iter, vs) : iterexp) : iterexp =
     | _ -> [List.hd vs]  (* prevent empty iterator list *)
   in (iter, vs'')
 
-(* If a param and premise is generated under an iteration, wrap them accordingly *)
+(* If a bind and premise is generated under an iteration, wrap them accordingly *)
 
 let under_iterexp (iter, vs) eqns : iterexp * eqns =
-   let new_vs = List.map (fun (param, _) ->
-     match param.it with
-     | ExpP (v, t) ->
+   let new_vs = List.map (fun (bind, _) ->
+     match bind.it with
+     | ExpB (v, t) ->
        (v, VarE v $$ v.at % (IterT (t, match iter with Opt -> Opt | _ -> List) $ v.at))
-     | TypP _ | DefP _ | GramP _ -> error param.at "unexpected sort of parameter"
+     | TypB _ | DefB _ | GramB _ -> error bind.at "unexpected type binding"
    ) eqns in
-   let eqns' = List.map2 (fun (param, pr) (v, e) ->
+   let eqns' = List.map2 (fun (bind, pr) (v, e) ->
      let iterexp' = update_iterexp_vars (Il.Free.free_prem pr) (iter, vs @ [(v, e)]) in
      let pr' = IterPr (pr, iterexp') $ no_region in
-     (ExpP (v, e.note) $ param.at, pr')
+     (ExpB (v, e.note) $ bind.at, pr')
    ) eqns new_vs in
    (iter, vs @ new_vs), eqns'
 
@@ -93,11 +104,11 @@ let rec t_exp n e : eqns * exp =
     in
     let x = fresh_id n in
     let xe = VarE x $$ no_region % t in
-    let param = ExpP (x, t) $ no_region in
+    let bind = ExpB (x, t) $ no_region in
     let prem = IfPr (
       CmpE (`EqOp, `BoolT, exp, OptE (Some xe) $$ no_region % ot) $$ no_region % (BoolT $ no_region)
     ) $ no_region in
-    eqns @ [(param, prem)], xe
+    eqns @ [(bind, prem)], xe
   | _ -> eqns, e'
 
 (* Traversal helpers *)
@@ -154,12 +165,12 @@ and t_field n ((a, e) : expfield) =
   unary t_exp n e (fun e' -> (a, e'))
 
 and t_iterexp n iterexp =
-  binary t_iter t_iterparams n iterexp Fun.id
+  binary t_iter t_iterbinds n iterexp Fun.id
 
-and t_iterparams n params =
-  t_list t_iterparam n params Fun.id
+and t_iterbinds n binds =
+  t_list t_iterbind n binds Fun.id
 
-and t_iterparam n (id, e) =
+and t_iterbind n (id, e) =
   unary t_exp n e (fun e' -> (id, e'))
 
 and t_iter n iter = match iter with
@@ -186,9 +197,10 @@ let rec t_prem n : prem -> eqns * prem = phrase t_prem' n
 
 and t_prem' n prem : eqns * prem' =
   match prem with
-  | RulePr (a, args, b, exp) -> binary (fun n x -> t_list t_arg n x Fun.id) t_exp n (args, exp) (fun (args', exp') -> RulePr (a, args', b, exp'))
+  | RulePr (a, b, exp) ->
+    unary t_exp n exp (fun exp' -> RulePr (a, b, exp'))
   | IfPr e -> unary t_exp n e (fun e' -> IfPr e')
-  | LetPr (qs, e1, e2) -> binary t_exp t_exp n (e1, e2) (fun (e1', e2') -> LetPr (qs, e1', e2'))
+  | LetPr (e1, e2, ids) -> binary t_exp t_exp n (e1, e2) (fun (e1', e2') -> LetPr (e1', e2', ids))
   | ElsePr -> [], prem
   | IterPr (prem, iterexp) ->
     let eqns1, prem' = t_prem n prem in
@@ -203,18 +215,18 @@ and t_prem' n prem : eqns * prem' =
 let t_prems n k  = t_list t_prem n k (fun x -> x)
 
 let t_rule' = function
-  | RuleD (id, params, mixop, exp, prems) ->
+  | RuleD (id, binds, mixop, exp, prems) ->
     (* Counter for fresh variables *)
     let n = ref 0 in
     let eqns, (exp', prems') = binary t_exp t_prems n (exp, prems) (fun x -> x) in
-    let extra_params, extra_prems = List.split eqns in
-    RuleD (id, params @ extra_params, mixop, exp', extra_prems @ prems')
+    let extra_binds, extra_prems = List.split eqns in
+    RuleD (id, binds @ extra_binds, mixop, exp', extra_prems @ prems')
 
 let t_rule x = { x with it = t_rule' x.it }
 
 let rec t_def' = function
   | RecD defs -> RecD (List.map t_def defs)
-  | RelD (id, params, mixop, typ, rules) -> RelD (id, params, mixop, typ, List.map t_rule rules)
+  | RelD (id, mixop, typ, rules) -> RelD (id, mixop, typ, List.map t_rule rules)
   | def -> def
 
 and t_def x = { x with it = t_def' x.it }

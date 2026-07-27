@@ -14,11 +14,7 @@ and atom' =
   | Dot2                         (* `..` *)
   | Dot3                         (* `...` *)
   | Semicolon                    (* `;` *)
-  | Slash                        (* ``/` *)
-  | Backslash                    (* ``\` *)
-  | Not                          (* ``~` *)
-  | And                          (* ``/\` *)
-  | Or                           (* ``\/` *)
+  | Backslash                    (* `\` *)
   | Mem                          (* `<-` *)
   | NotMem                       (* `</-` *)
   | Arrow                        (* `->` *)
@@ -47,27 +43,18 @@ and atom' =
   | SqArrowStarSub               (* `~>*_` *)
   | Prec                         (* `<<` *)
   | Succ                         (* `>>` *)
-  | PrecSub                      (* `<<_` *)
-  | SuccSub                      (* `>>_` *)
   | Turnstile                    (* `|-` *)
   | TurnstileSub                 (* `|-_` *)
   | Tilesturn                    (* `-|` *)
   | TilesturnSub                 (* `-|_` *)
-  | Quest                        (* ``^?` *)
-  | Star                         (* ``^*` *)
-  | Iter                         (* ``^+` *)
+  | Quest                        (* ``?` *)
   | Plus                         (* ``+` *)
-  | Minus                        (* ``-` *)
-  | PlusMinus                    (* ``+-` *)
-  | MinusPlus                    (* ``-+` *)
-  | Times                        (* ``*` *)
+  | Star                         (* ``*` *)
   | Comma                        (* ``,` *)
   | Cat                          (* ``++` *)
   | Bar                          (* ``|` *)
   | BigAnd                       (* `(/\)` *)
   | BigOr                        (* `(\/)` *)
-  | BigForall                    (* `(!)` *)
-  | BigExists                    (* `(?)` *)
   | BigAdd                       (* `(+)` *)
   | BigMul                       (* `( * )` *)
   | BigCat                       (* `(++)` *)
@@ -86,8 +73,7 @@ let is_sub atom =
   match atom.it with
   | Atom id -> id <> "" && id.[String.length id - 1] = '_'
   | ArrowSub | Arrow2Sub | ColonSub | EqualSub | EquivSub | ApproxSub
-  | SqArrowSub | SqArrowStarSub | PrecSub | SuccSub
-  | TurnstileSub | TilesturnSub -> true
+  | SqArrowSub | SqArrowStarSub | TurnstileSub | TilesturnSub -> true
   | _ -> false
 
 let sub atom1 atom2 = 
@@ -101,8 +87,6 @@ let sub atom1 atom2 =
   | ApproxSub, Approx
   | SqArrowSub, SqArrow
   | SqArrowStarSub, SqArrowStar
-  | PrecSub, Prec
-  | SuccSub, Succ
   | TurnstileSub, Turnstile
   | TilesturnSub, Tilesturn -> true
   | _, _ -> false
@@ -119,7 +103,6 @@ let to_string atom =
   | Dot2 -> ".."
   | Dot3 -> "..."
   | Semicolon -> ";"
-  | Slash -> "/"
   | Backslash -> "\\"
   | Mem -> "<-"
   | NotMem -> "</-"
@@ -149,30 +132,18 @@ let to_string atom =
   | SqArrowStarSub -> "~>*_"
   | Prec -> "<<"
   | Succ -> ">>"
-  | PrecSub -> "<<_"
-  | SuccSub -> ">>_"
   | Tilesturn -> "-|"
-  | Turnstile -> "|-"
   | TilesturnSub -> "-|_"
+  | Turnstile -> "|-"
   | TurnstileSub -> "|-_"
-  | Quest -> "^?"
-  | Star -> "^*"
-  | Iter -> "^+"
+  | Quest -> "?"
   | Plus -> "+"
-  | Minus -> "-"
-  | PlusMinus -> "+-"
-  | MinusPlus -> "-+"
-  | Times -> "*"
-  | Not -> "~"
-  | And -> "/\\"
-  | Or -> "\\/"
+  | Star -> "*"
   | Comma -> ","
   | Cat -> "++"
   | Bar -> "|"
   | BigAnd -> "(/\\)"
   | BigOr -> "(\\/)"
-  | BigForall -> "(!)"
-  | BigExists -> "(?)"
   | BigAdd -> "(+)"
   | BigMul -> "(*)"
   | BigCat -> "(++)"
@@ -197,7 +168,6 @@ let name atom =
   | Dot2 -> "dotdot"              (* Latex: .. *)
   | Dot3 -> "dots"                (* Latex: \ldots *)
   | Semicolon -> "semicolon"      (* Latex: ; *)
-  | Slash -> "slash"              (* Latex: / *)
   | Backslash -> "setminus"
   | Mem -> "in"
   | NotMem -> "notin"
@@ -227,30 +197,18 @@ let name atom =
   | SqArrowStarSub -> "sqarrowstar_" (* Latex: \hookrightarrow^\ast with subscript *)
   | Prec -> "prec"
   | Succ -> "succ"
-  | PrecSub -> "prec_"
-  | SuccSub -> "succ_"
   | Tilesturn -> "dashv"
-  | Turnstile -> "vdash"
   | TilesturnSub -> "dashv_"      (* Latex: \dashv with subscript *)
+  | Turnstile -> "vdash"
   | TurnstileSub -> "vdash_"      (* Latex: \vdash with subscript *)
-  | Quest -> "quest"              (* Latex: ^? *)
-  | Star -> "ast"                 (* Latex: ^\ast *)
-  | Iter -> "iter"                (* Latex: ^+ *)
+  | Quest -> "quest"              (* Latex: ? *)
   | Plus -> "plus"                (* Latex: + *)
-  | Minus -> "minus"              (* Latex: - *)
-  | PlusMinus -> "plusminus"      (* Latex: \pm *)
-  | MinusPlus -> "minusplus"      (* Latex: \mp *)
-  | Times -> "times"
-  | Not -> "not"                  (* Latex: \neg *)
-  | And -> "and"                  (* Latex: \land *)
-  | Or -> "or"                    (* Latex: \lor *)
+  | Star -> "ast"
   | Comma -> "comma"              (* Latex: , *)
   | Cat -> "cat"                  (* Latex: \oplus *)
   | Bar -> "bar"                  (* Latex: | *)
   | BigAnd -> "bigand"            (* Latex: \bigwedge *)
   | BigOr -> "bigor"              (* Latex: \bigvee *)
-  | BigForall -> "forall"
-  | BigExists -> "exists"
   | BigAdd -> "bigadd"            (* Latex: \Sigma *)
   | BigMul -> "bigmul"            (* Latex: \Pi *)
   | BigCat -> "bigcat"            (* Latex: \bigoplus *)

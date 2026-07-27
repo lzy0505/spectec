@@ -7,12 +7,14 @@ Values
 ~~~~~~
 
 .. _syntax-num:
+.. _syntax-addrref:
 .. _syntax-ref:
 .. _syntax-val:
 
 $${syntax+:
   num
-  ref
+  {addrref
+  ref}
   val
 }
 

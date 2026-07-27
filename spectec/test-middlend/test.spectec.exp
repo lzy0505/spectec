@@ -11,25 +11,6 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
     `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
 
-;; test.spectec
-def $t_totalize(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize(3) = 5
-  ;; test.spectec
-  def $t_totalize(10) = 20
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize2(1) = 2
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = ($t_totalize(n) + $t_totalize2((n + 10)))
-
 == IL Validation...
 == Running pass ite...
 
@@ -43,27 +24,8 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
     `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
 
-;; test.spectec
-def $t_totalize(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize(3) = 5
-  ;; test.spectec
-  def $t_totalize(10) = 20
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize2(1) = 2
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = ($t_totalize(n) + $t_totalize2((n + 10)))
-
 == IL Validation after pass ite...
-== Running pass let-intro-mech...
+== Running pass let-intro...
 
 ;; test.spectec
 relation HasSize: `%|-%`(nat, nat)
@@ -75,26 +37,7 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
     `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
 
-;; test.spectec
-def $t_totalize(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize(3) = 5
-  ;; test.spectec
-  def $t_totalize(10) = 20
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize2(1) = 2
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = ($t_totalize(n) + $t_totalize2((n + 10)))
-
-== IL Validation after pass let-intro-mech...
+== IL Validation after pass let-intro...
 == Running pass typefamily-removal...
 
 ;; test.spectec
@@ -106,25 +49,6 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
   rule _{`n***` : nat***, `m**` : nat**}:
     `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
-
-;; test.spectec
-def $t_totalize(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize(3) = 5
-  ;; test.spectec
-  def $t_totalize(10) = 20
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize2(1) = 2
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = ($t_totalize(n) + $t_totalize2((n + 10)))
 
 == IL Validation after pass typefamily-removal...
 == Running pass remove-indexed-types...
@@ -139,25 +63,6 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
     `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
 
-;; test.spectec
-def $t_totalize(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize(3) = 5
-  ;; test.spectec
-  def $t_totalize(10) = 20
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize2(1) = 2
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = ($t_totalize(n) + $t_totalize2((n + 10)))
-
 == IL Validation after pass remove-indexed-types...
 == Running pass totalize...
 
@@ -170,27 +75,6 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
   rule _{`n***` : nat***, `m**` : nat**}:
     `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
-
-;; test.spectec
-def $t_totalize(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize(3) = ?(5)
-  ;; test.spectec
-  def $t_totalize(10) = ?(20)
-  def $t_totalize{x0 : nat}(x0) = ?()
-    -- otherwise
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize2(1) = ?(2)
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = (iter_val#2 + iter_val#1)?{iter_val#2 <- $t_totalize(n), iter_val#1 <- $t_totalize2((n + 10))}
 
 == IL Validation after pass totalize...
 == Running pass else...
@@ -205,27 +89,6 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
     `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
 
-;; test.spectec
-def $t_totalize(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize(3) = ?(5)
-  ;; test.spectec
-  def $t_totalize(10) = ?(20)
-  def $t_totalize{x0 : nat}(x0) = ?()
-    -- otherwise
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize2(1) = ?(2)
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = (iter_val#2 + iter_val#1)?{iter_val#2 <- $t_totalize(n), iter_val#1 <- $t_totalize2((n + 10))}
-
 == IL Validation after pass else...
 == Running pass else-simplification...
 
@@ -238,27 +101,6 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
   rule _{`n***` : nat***, `m**` : nat**}:
     `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
-
-;; test.spectec
-def $t_totalize(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize(3) = ?(5)
-  ;; test.spectec
-  def $t_totalize(10) = ?(20)
-  def $t_totalize{x0 : nat}(x0) = ?()
-    -- otherwise
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize2(1) = ?(2)
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = (iter_val#2 + iter_val#1)?{iter_val#2 <- $t_totalize(n), iter_val#1 <- $t_totalize2((n + 10))}
 
 == IL Validation after pass else-simplification...
 == Running pass uncase-removal...
@@ -273,28 +115,46 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
     `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
 
-;; test.spectec
-def $t_totalize(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize(3) = ?(5)
-  ;; test.spectec
-  def $t_totalize(10) = ?(20)
-  def $t_totalize{x0 : nat}(x0) = ?()
-    -- otherwise
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize2(1) = ?(2)
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = (iter_val#2 + iter_val#1)?{iter_val#2 <- $t_totalize(n), iter_val#1 <- $t_totalize2((n + 10))}
-
 == IL Validation after pass uncase-removal...
+== Running pass sub-expansion...
+
+;; test.spectec
+relation HasSize: `%|-%`(nat, nat)
+
+;; test.spectec
+relation TestNestedIter: `%|-%`(nat***, nat**)
+  ;; test.spectec
+  rule _{`n***` : nat***, `m**` : nat**}:
+    `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
+    -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
+
+== IL Validation after pass sub-expansion...
+== Running pass sub...
+
+;; test.spectec
+relation HasSize: `%|-%`(nat, nat)
+
+;; test.spectec
+relation TestNestedIter: `%|-%`(nat***, nat**)
+  ;; test.spectec
+  rule _{`n***` : nat***, `m**` : nat**}:
+    `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
+    -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
+
+== IL Validation after pass sub...
+== Running pass definition-to-relation...
+
+;; test.spectec
+relation HasSize: `%|-%`(nat, nat)
+
+;; test.spectec
+relation TestNestedIter: `%|-%`(nat***, nat**)
+  ;; test.spectec
+  rule _{`n***` : nat***, `m**` : nat**}:
+    `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
+    -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
+
+== IL Validation after pass definition-to-relation...
 == Running pass sideconditions...
 
 ;; test.spectec
@@ -309,100 +169,7 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
     -- (if (|`m*`| = |`n**`|))+{`m*` <- `m**`, `n**` <- `n***`}
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
 
-;; test.spectec
-def $t_totalize(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize(3) = ?(5)
-  ;; test.spectec
-  def $t_totalize(10) = ?(20)
-  def $t_totalize{x0 : nat}(x0) = ?()
-    -- otherwise
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize2(1) = ?(2)
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = (iter_val#2 + iter_val#1)?{iter_val#2 <- $t_totalize(n), iter_val#1 <- $t_totalize2((n + 10))}
-
 == IL Validation after pass sideconditions...
-== Running pass sub-expansion...
-
-;; test.spectec
-relation HasSize: `%|-%`(nat, nat)
-
-;; test.spectec
-relation TestNestedIter: `%|-%`(nat***, nat**)
-  ;; test.spectec
-  rule _{`n***` : nat***, `m**` : nat**}:
-    `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
-    -- if (|`m**`| = |`n***`|)
-    -- (if (|`m*`| = |`n**`|))+{`m*` <- `m**`, `n**` <- `n***`}
-    -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
-
-;; test.spectec
-def $t_totalize(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize(3) = ?(5)
-  ;; test.spectec
-  def $t_totalize(10) = ?(20)
-  def $t_totalize{x0 : nat}(x0) = ?()
-    -- otherwise
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize2(1) = ?(2)
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = (iter_val#2 + iter_val#1)?{iter_val#2 <- $t_totalize(n), iter_val#1 <- $t_totalize2((n + 10))}
-
-== IL Validation after pass sub-expansion...
-== Running pass sub...
-
-;; test.spectec
-relation HasSize: `%|-%`(nat, nat)
-
-;; test.spectec
-relation TestNestedIter: `%|-%`(nat***, nat**)
-  ;; test.spectec
-  rule _{`n***` : nat***, `m**` : nat**}:
-    `%|-%`(n*{n <- `n*`}*{`n*` <- `n**`}+{`n**` <- `n***`}, m*{m <- `m*`}+{`m*` <- `m**`})
-    -- if (|`m**`| = |`n***`|)
-    -- (if (|`m*`| = |`n**`|))+{`m*` <- `m**`, `n**` <- `n***`}
-    -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
-
-;; test.spectec
-def $t_totalize(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize(3) = ?(5)
-  ;; test.spectec
-  def $t_totalize(10) = ?(20)
-  def $t_totalize{x0 : nat}(x0) = ?()
-    -- otherwise
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize2(1) = ?(2)
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = (iter_val#2 + iter_val#1)?{iter_val#2 <- $t_totalize(n), iter_val#1 <- $t_totalize2((n + 10))}
-
-== IL Validation after pass sub...
 == Running pass alias-demut...
 
 ;; test.spectec
@@ -416,27 +183,6 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
     -- if (|`m**`| = |`n***`|)
     -- (if (|`m*`| = |`n**`|))+{`m*` <- `m**`, `n**` <- `n***`}
     -- (if (|n*{n <- `n*`}| = m))*{m <- `m*`, `n*` <- `n**`}+{`m*` <- `m**`, `n**` <- `n***`}
-
-;; test.spectec
-def $t_totalize(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize(3) = ?(5)
-  ;; test.spectec
-  def $t_totalize(10) = ?(20)
-  def $t_totalize{x0 : nat}(x0) = ?()
-    -- otherwise
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize2(1) = ?(2)
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = (iter_val#2 + iter_val#1)?{iter_val#2 <- $t_totalize(n), iter_val#1 <- $t_totalize2((n + 10))}
 
 == IL Validation after pass alias-demut...
 == Running pass improve-ids...
@@ -452,27 +198,6 @@ relation TestNestedIter: `%|-%`(nat***, nat**)
     -- if (|m_lst_lst| = |n_lst_lst_lst|)
     -- (if (|m_lst| = |n_lst_lst|))+{m_lst <- m_lst_lst, n_lst_lst <- n_lst_lst_lst}
     -- (if (|n_lst| = m))*{m <- m_lst, n_lst <- n_lst_lst}+{m_lst <- m_lst_lst, n_lst_lst <- n_lst_lst_lst}
-
-;; test.spectec
-def $t_totalize(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize(3) = ?(5)
-  ;; test.spectec
-  def $t_totalize(10) = ?(20)
-  def $t_totalize{x0 : nat}(x0) = ?()
-    -- otherwise
-
-;; test.spectec
-def $t_totalize2(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize2(1) = ?(2)
-  ;; test.spectec
-  def $t_totalize2{n : nat}(n) = $t_totalize(n)
-
-;; test.spectec
-def $t_totalize3(nat : nat) : nat?
-  ;; test.spectec
-  def $t_totalize3{n : nat}(n) = (iter_val#2 + iter_val#1)?{iter_val#2 <- $t_totalize(n), iter_val#1 <- $t_totalize2((n + 10))}
 
 == IL Validation after pass improve-ids...
 == Complete.

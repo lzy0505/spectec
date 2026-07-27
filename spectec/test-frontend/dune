@@ -3,6 +3,7 @@
   (deps
     (file ../src/exe-spectec/main.exe)
     (glob_files_rec ../_specification/*)
+    (file nested-empty.spectec)
     (file test.spectec)
   )
   (files TEST.md)

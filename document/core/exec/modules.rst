@@ -182,14 +182,6 @@ $${definition: instantiate}
 
 where:
 
-.. _eval-exprs:
-
-$${definition-prose: evalexprs}
-
-$${definition: evalexprs}
-
-and:
-
 .. _eval-globals:
 
 $${definition-prose: evalglobals}

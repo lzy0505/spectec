@@ -8,12 +8,12 @@ relation Step_read: config ~> admininstr*       hint(show "E") hint(tabular)
 relation Steps: config ~>* config               hint(show "E") hint(tabular)
 
 rule Step/pure:
-  z; admininstr*  ~>  z; admininstr'*
-  -- Step_pure: admininstr* ~> admininstr'*
+  z; instr*  ~>  z; instr'*
+  -- Step_pure: instr* ~> instr'*
 
 rule Step/read:
-  z; admininstr*  ~>  z; admininstr'*
-  -- Step_read: z; admininstr* ~> admininstr'*
+  z; instr*  ~>  z; instr'*
+  -- Step_read: z; instr* ~> instr'*
 
 rule Steps/refl:
   z; admininstr* ~>* z; admininstr*
@@ -155,17 +155,12 @@ rule Step_pure/trap-frame:
 ;; Context
 
 rule Step/ctxt-label:
-  z; (LABEL_ n `{instr_0*} admininstr*)  ~>  z'; (LABEL_ n `{instr_0*} admininstr'*)
-  -- Step: z; admininstr* ~> z'; admininstr'*
+  z; (LABEL_ n `{instr_0*} instr*)  ~>  z'; (LABEL_ n `{instr_0*} instr'*)
+  -- Step: z; instr* ~> z'; instr'*
 
 rule Step/ctxt-frame:
-  s; f; (FRAME_ n `{f'} admininstr*)  ~>  s'; f; (FRAME_ n `{f''} admininstr'*)
-  -- Step: s; f'; admininstr* ~> s'; f''; admininstr'*
-
-rule Step/ctxt-instrs:
-  z; val* admininstr* admininstr_1*  ~>  z'; val* admininstr'* admininstr_1*
-  -- Step: z; admininstr* ~> z'; admininstr'*
-  -- if val* =/= eps \/ admininstr_1* =/= eps
+  s; f; (FRAME_ n `{f'} instr*)  ~>  s'; f; (FRAME_ n `{f'} instr'*)
+  -- Step: s; f'; instr* ~> s'; f'; instr'*
 
 
 ;; Numeric instructions

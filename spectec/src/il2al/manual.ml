@@ -12,6 +12,7 @@ let listT ty = Il.Ast.IterT (ty, Il.Ast.List) $ no_region
 let expA e = ExpA e $ e.at
 
 let eval_expr =
+  let open Xl.Atom in
   let ty_instrs = listT instrT in
   let ty_vals = listT valT in
   let instrs = iter_var "instr" List instrT in
@@ -23,10 +24,7 @@ let eval_expr =
     Il.Env.bind_def !Al.Valid.il_env ("Eval_expr" $ no_region) ([param], ty_vals, []);
 
   RuleA (
-    Xl.Mixop.(Seq [
-      Atom Xl.Atom.(Atom "Eval_expr" $$ no_region % {def=""; case=""});
-      Arg ()
-    ]),
+    Atom "Eval_expr" $$ no_region % {def=""; case=""},
     "Eval_expr",
     [expA instrs],
     [

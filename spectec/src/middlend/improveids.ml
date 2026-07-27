@@ -1,3 +1,7 @@
+(* 
+  This pass simply ensures that there is no ambiguity between any names.
+*)
+
 open Il.Ast
 open Il
 open Il.Walk
@@ -71,22 +75,27 @@ let has_atom_hole m =
   | [{it = Atom "_"; _}] -> true
   | _ -> false
 
+let register_atom_id env s =
+  env.atom_str_set <- StringSet.add s env.atom_str_set
+
 (* Atom functions *)
 let transform_atom env typ_id a = 
   match a.it with
-  | Atom s -> Atom (t_user_def_id env (s $ a.at)).it $$ a.at % a.note
-  | _ -> Atom (make_prefix ^ typ_id) $$ a.at % a.note
+  | Atom s -> 
+    register_atom_id env (t_user_def_id env (s $ a.at)).it;
+    Atom (t_user_def_id env (s $ a.at)).it $$ a.at % a.note
+  | _ -> 
+    register_atom_id env (make_prefix ^ typ_id);
+    Atom (make_prefix ^ typ_id) $$ a.at % a.note
 
-let transform_mixop env typ_id (m : mixop) =
-(* TODO! Not sure what the expected result is for this one. *)
-ignore (env, typ_id, empty_info, is_atomid, has_atom_hole, transform_atom); m
-(*
+let transform_mixop env typ_id (m : mixop) = 
   let m' = List.map (fun inner_m -> List.filter is_atomid inner_m) m in
   let len = List.length m' in 
   match m' with
-  | _ when List.for_all (fun l -> l = [] || has_atom_hole l) m' -> [(Atom (make_prefix ^ typ_id) $$ empty_info)] :: List.init (len - 1) (fun _ -> [])
-  | _ -> Xl.Mixop.map_atoms (transform_atom env typ_id)) m'
-*)
+  | _ when List.for_all (fun l -> l = [] || has_atom_hole l) m' -> 
+    register_atom_id env (make_prefix ^ typ_id);
+    [(Atom (make_prefix ^ typ_id) $$ empty_info)] :: List.init (len - 1) (fun _ -> [])
+  | _ -> List.map (List.map (transform_atom env typ_id)) m'
 
 let rec check_iteration_naming e iterexp = 
   match e.it, iterexp with
@@ -133,27 +142,33 @@ and t_path env path =
 
 let t_inst tf env id inst = 
   (match inst.it with
-  | InstD (quants, args, deftyp) -> InstD (List.map (transform_param tf) quants, List.map (transform_arg tf) args, 
+  | InstD (binds, args, deftyp) -> InstD (List.map (transform_bind tf) binds, List.map (transform_arg tf) args, 
     (match deftyp.it with 
     | AliasT typ -> AliasT (transform_typ tf typ)
-    | StructT typfields -> StructT (List.map (fun (a, (typ, c_quants, prems), hints) ->
+    | StructT typfields -> StructT (List.map (fun (a, (c_binds, typ, prems), hints) ->
         (transform_atom env id.it a, 
-        (transform_typ tf typ, List.map (transform_param tf) c_quants, List.map (transform_prem tf) prems), hints)  
+        (List.map (transform_bind tf) c_binds, transform_typ tf typ, List.map (transform_prem tf) prems), hints)  
       ) typfields)
     | VariantT typcases -> 
-      VariantT (List.map (fun (m, (typ, c_quants, prems), hints) -> 
+      VariantT (List.map (fun (m, (c_binds, typ, prems), hints) -> 
         (transform_mixop env id.it m, 
-        (transform_typ tf typ, List.map (transform_param tf) c_quants, List.map (transform_prem tf) prems), hints)  
+        (List.map (transform_bind tf) c_binds, transform_typ tf typ, List.map (transform_prem tf) prems), hints)  
       ) typcases)
     ) $ deftyp.at
   )
   ) $ inst.at
 
+(* Necessary to reset ids due to change on iterE *)
+let t_prem prem = 
+  { prem with it = match prem.it with
+  | LetPr (e1, e2, _) -> LetPr (e1, e2, Free.Set.elements (Free.free_exp e1).varid)
+  | p -> p }
+
 let transform_rule tf env rel_id rule = 
   (match rule.it with
-  | RuleD (id, quants, m, exp, prems) -> 
+  | RuleD (id, binds, m, exp, prems) -> 
     RuleD (transform_rule_id env id rel_id $ id.at, 
-    List.map (transform_param tf) quants, 
+    List.map (transform_bind tf) binds, 
     m, 
     transform_exp tf exp, 
     List.map (transform_prem tf) prems
@@ -165,6 +180,7 @@ let rec t_def env def =
     transform_exp = t_exp env;
     transform_typ = t_typ env;
     transform_path = t_path env;
+    transform_prem = t_prem;
     transform_var_id = t_var_id env;
     transform_typ_id = t_user_def_id env;
     transform_rel_id = t_user_def_id env;
@@ -175,11 +191,8 @@ let rec t_def env def =
     TypD (t_user_def_id env id, 
     List.map (transform_param tf) params |> Utils.improve_ids_params, 
     List.map (t_inst tf env id) insts)
-  | RelD (id, params, m, typ, rules) -> 
-    RelD (t_user_def_id env id,
-    List.map (transform_param tf) params |> Utils.improve_ids_params,
-    m, transform_typ tf typ,
-    List.map (transform_rule tf env id) rules)
+  | RelD (id, m, typ, rules) -> 
+    RelD (t_user_def_id env id, m, transform_typ tf typ, List.map (transform_rule tf env id) rules)
   | DecD (id, params, typ, clauses) -> 
     DecD (t_def_id env id, 
     List.map (transform_param tf) params |> Utils.improve_ids_params, 

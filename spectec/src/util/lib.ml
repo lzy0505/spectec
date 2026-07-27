@@ -1,7 +1,3 @@
-let fst3 (x, _, _) = x
-let snd3 (_, y, _) = y
-let thd3 (_, _, z) = z
-
 module List =
 struct
   include List

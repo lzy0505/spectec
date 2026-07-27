@@ -44,18 +44,7 @@ syntax export hint(desc "export") =
   EXPORT name externidx
 
 syntax module hint(desc "module") =
-  MODULE
-    list(type)
-    list(import)
-    list(tag)
-    list(global)
-    list(mem)
-    list(table)
-    list(func)
-    list(data)
-    list(elem)
-    start?
-    list(export)
+  MODULE type* import* tag* global* mem* table* func* data* elem* start? export*
 
 
 ;; Meta variables

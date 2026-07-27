@@ -144,11 +144,8 @@ let funcs = List.filter_map (function ExternFuncT ft -> Some ft | _ -> None)
 
 type subst = typeuse -> typeuse
 
-exception UnknownIndex of typeidx
-
 let subst_of dts = function
-  | Idx x ->
-    Def (try Lib.List32.nth dts x with Failure _ -> raise (UnknownIndex x))
+  | Idx x -> Def (Lib.List32.nth dts x)
   | Rec i -> Rec i
   | Def _ -> assert false
 

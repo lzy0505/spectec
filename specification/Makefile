@@ -11,10 +11,10 @@ ci: check-all spec-clean spec test-clean test
 
 # Checking
 
-check: check-latest
+check: check-3.0
 
 check-1.0: $(EXE)
-	$(EXE) wasm-1.0/*
+	$(EXE) wasm-1.0/*.spectec
 	@echo Wasm 1.0 spec checked OK.
 	@echo =========================
 
@@ -28,40 +28,26 @@ check-3.0: $(EXE)
 	@echo Wasm 3.0 spec checked OK.
 	@echo =========================
 
-check-latest: $(EXE)
-	$(EXE) wasm-latest/*
-	@echo Wasm latest spec checked OK.
-	@echo ============================
-
-check-all: check-1.0 check-2.0 check-3.0 check-latest
+check-all: check-1.0 check-2.0 check-3.0
 	@echo All Wasm specs checked OK.
-
-check-diff:
-	bash ./diff-wasm-latest.sh
-
-
-# Sync
-
-sync-diff:
-	bash ./sync-wasm-latest.sh
 
 
 # Build
 
 spec:
 	(cd ../document/core && make main)
-	@echo Wasm latest specs all built OK.
-	@echo ===============================
+	@echo Wasm 3.0 specs all built OK.
+	@echo ============================
 
 spec-pdf:
 	(cd ../document/core && make pdf)
-	@echo Wasm latest PDF spec built OK.
-	@echo ==============================
+	@echo Wasm 3.0 PDF spec built OK.
+	@echo ===========================
 
 spec-html:
 	(cd ../document/core && make html)
-	@echo Wasm latest HTML spec built OK.
-	@echo ===============================
+	@echo Wasm 3.0 HTML spec built OK.
+	@echo ============================
 
 spec-clean:
 	(cd ../document/core && make clean)
@@ -71,8 +57,8 @@ spec-clean:
 
 test:
 	@((cd ../spectec/src && make test) || @echo Backend tests failed. Perhaps run `make testpromote` to update test output.)
-	@echo Wasm latest backend tests ran OK.
-	@echo =================================
+	@echo Wasm 3.0 backend tests ran OK.
+	@echo ==============================
 
 test-clean:
 	@(cd ../spectec/src && make clean)

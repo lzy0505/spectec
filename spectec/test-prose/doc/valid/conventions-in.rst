@@ -258,7 +258,15 @@ $${definition: unrolldt}
 
 .. _def-unrollht:
 
-$${definition: unrollht_}
+$${definition: unrollht}
+
+.. _def-expanddt:
+
+$${definition-prose: expanddt}
+
+\
+
+$${definition: expanddt}
 
 $${rule: Expand}
 

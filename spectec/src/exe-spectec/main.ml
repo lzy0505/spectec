@@ -13,6 +13,8 @@ type target =
  | Prose of bool
  | Splice of Backend_splice.Config.t
  | Interpreter of string list
+ | Rocq
+ | Lean4
 
 type pass =
   | Sub
@@ -22,13 +24,14 @@ type pass =
   | TypeFamilyRemoval
   | Else
   | Undep
+  | DefToRel
   | SubExpansion
   | Uncaseremoval
   | AliasDemut
   | ImproveIds
   | Ite
   | ElseSimp
-  | LetIntroMech
+  | LetIntro
 
 (* This list declares the intended order of passes.
 
@@ -39,16 +42,17 @@ flags on the command line.
 let _skip_passes = [ Unthe ]  (* Not clear how to extend them to indexed types *)
 let all_passes = [
   Ite;
-  LetIntroMech;
+  LetIntro;
   TypeFamilyRemoval;
   Undep;
   Totalize;
   Else;
   ElseSimp;
   Uncaseremoval;
-  Sideconditions;
   SubExpansion;
   Sub;
+  DefToRel;
+  Sideconditions;
   AliasDemut;
   ImproveIds
 ]
@@ -112,12 +116,13 @@ let pass_flag = function
   | AliasDemut -> "alias-demut"
   | Else -> "else"
   | Undep -> "remove-indexed-types"
+  | DefToRel -> "definition-to-relation"
   | SubExpansion -> "sub-expansion"
   | Uncaseremoval -> "uncase-removal"
   | ImproveIds -> "improve-ids"
   | Ite -> "ite"
   | ElseSimp -> "else-simplification"
-  | LetIntroMech -> "let-intro-mech"
+  | LetIntro -> "let-intro"
 
 let pass_desc = function
   | Sub -> "Synthesize explicit subtype coercions"
@@ -127,13 +132,14 @@ let pass_desc = function
   | TypeFamilyRemoval -> "Transform Type families into sum types"
   | Else -> "Eliminate the otherwise premise in relations"
   | Undep -> "Transform indexed types into types with well-formedness predicates"
+  | DefToRel -> "Transform specific function definitions into relations"
   | SubExpansion -> "Expands subtype matching"
   | Uncaseremoval -> "Eliminate the uncase expression"
   | AliasDemut -> "Lifts type aliases out of mutual groups"
   | ImproveIds -> "Disambiguates ids used from each other"
   | Ite -> "If-then-else introduction"
   | ElseSimp -> "Simplifies generated otherwise relations (after else pass)"
-  | LetIntroMech -> "Let Premise introduction for mechanization backends"
+  | LetIntro -> "Let Premise introduction"
 
 
 let run_pass : pass -> Il.Ast.script -> Il.Ast.script = function
@@ -144,13 +150,15 @@ let run_pass : pass -> Il.Ast.script -> Il.Ast.script = function
   | TypeFamilyRemoval -> Middlend.Typefamilyremoval.transform
   | Else -> Middlend.Else.transform
   | Undep -> Middlend.Undep.transform
+  | DefToRel -> Middlend.Deftorel.transform
   | SubExpansion -> Middlend.Subexpansion.transform
   | Uncaseremoval -> Middlend.Uncaseremoval.transform
   | AliasDemut -> Middlend.AliasDemut.transform
   | ImproveIds -> Middlend.Improveids.transform
   | Ite -> Middlend.Ite.transform
-  | LetIntroMech -> Middlend.Letintromech.transform
   | ElseSimp -> Middlend.Elsesimp.transform
+  | LetIntro -> Middlend.Letintro.transform
+
 
 (* Argument parsing *)
 
@@ -204,6 +212,8 @@ let argspec = Arg.align (
   "--prose-rst", Arg.Unit (fun () -> target := Prose false), " Generate prose";
   "--interpreter", Arg.Rest_all (fun args -> target := Interpreter args),
     " Generate interpreter";
+  "--rocq", Arg.Unit (fun () -> target := Rocq), " Generate Rocq Inductive Definitions";
+  "--lean4", Arg.Unit (fun () -> target := Lean4), " Generate Lean4 specification";
   "--debug", Arg.Unit (fun () -> Backend_interpreter.Debugger.debug := true),
     " Debug interpreter";
   "--unified-vars", Arg.Unit (fun () -> Il2al.Unify.rename := false),
@@ -218,12 +228,11 @@ let argspec = Arg.align (
   "--print-all-il-to", Arg.Set_string print_all_il_to, " Print IL after each step to file (with %s replaced by pass numer and name)";
   "--print-al", Arg.Set print_al, " Print al";
   "--print-al-o", Arg.Set_string print_al_o, " Print al with given name";
-  "--print-il-notes", Arg.Set Il.Print.print_notes, " Print IL with type annotations";
   "--print-no-pos", Arg.Set print_no_pos, " Suppress position info in output";
 ] @ List.map pass_argspec all_passes @ [
   "--all-passes", Arg.Unit (fun () -> List.iter enable_pass all_passes)," Run all passes";
 
-  "--test-version", Arg.Int (fun i -> Backend_interpreter.Construct.version := i; Il2al.Translate.version := i), " Wasm version to assume for tests (default: 3)";
+  "--test-version", Arg.Int (fun i -> Backend_interpreter.Construct.version := i), " Wasm version to assume for tests (default: 3)";
 
   "-help", Arg.Unit ignore, "";
   "--help", Arg.Unit ignore, "";
@@ -254,6 +263,20 @@ let () =
     (match !target with
     | Prose _ | Splice _ | Interpreter _ ->
       enable_pass Sideconditions;
+    | Rocq | Lean4 ->
+      enable_pass Sideconditions; 
+      enable_pass Totalize; 
+      enable_pass Else;
+      enable_pass TypeFamilyRemoval;
+      enable_pass Undep;
+      enable_pass Uncaseremoval;
+      enable_pass Sub;
+      enable_pass SubExpansion;
+      enable_pass ImproveIds;
+      enable_pass AliasDemut;
+      enable_pass DefToRel;
+      enable_pass Ite;
+      enable_pass ElseSimp
     | _ when !print_al || !print_al_o <> "" ->
       enable_pass Sideconditions;
     | _ -> ()
@@ -280,7 +303,7 @@ let () =
     if !print_final_il && not !print_all_il then print_il il;
 
     let al =
-      if not !print_al && !print_al_o = "" && (!target = Check || !target = Ast || !target = Latex) then []
+      if not !print_al && !print_al_o = "" && (!target = Check || !target = Ast || !target = Latex || !target = Rocq || !target = Lean4) then []
       else (
         log "Translating to AL...";
         let interp = match !target with
@@ -293,8 +316,8 @@ let () =
     let match_algo_name algo_name al_elt =
       algo_name = "" ||
       (match al_elt.Util.Source.it with
-      | Al.Ast.RuleA (m, _, _, _) ->
-        Al.Print.string_of_mixop m = String.uppercase_ascii algo_name
+      | Al.Ast.RuleA (a, _, _, _) ->
+        Al.Print.string_of_atom a = String.uppercase_ascii algo_name
       | Al.Ast.FuncA (id , _, _) ->
         id = String.lowercase_ascii algo_name)
     in
@@ -390,6 +413,32 @@ let () =
       Backend_interpreter.Ds.init al;
       log "Interpreting...";
       Backend_interpreter.Runner.run args
+    | Rocq ->
+      log "Rocq Generation...";
+      (match !odsts with
+      | [] -> print_endline (Backend_rocq.Print.string_of_script il)
+      | [odst] -> 
+        let coq_code = Backend_rocq.Print.string_of_script il in
+        let oc = Out_channel.open_text odst in
+        Fun.protect (fun () -> Out_channel.output_string oc coq_code)
+          ~finally:(fun () -> Out_channel.close oc)
+      | _ ->
+        prerr_endline "too many output file names";
+        exit 2
+      )
+    | Lean4 ->
+      log "Lean Generation...";
+      (match !odsts with
+      | [] -> print_endline (Backend_lean4.Print.string_of_script il)
+      | [odst] -> 
+        let code = Backend_lean4.Print.string_of_script il in
+        let oc = Out_channel.open_text odst in
+        Fun.protect (fun () -> Out_channel.output_string oc code)
+          ~finally:(fun () -> Out_channel.close oc)
+      | _ ->
+        prerr_endline "too many output file names";
+        exit 2
+      )
     );
     log "Complete."
   with
