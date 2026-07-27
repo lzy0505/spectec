@@ -977,11 +977,13 @@ def setminus_ (X : Type) [BEq X] (l1 l2 : List X) : List X :=
 |}
 
 
-let rec is_valid_def def = 
+let rec filter_renderable_def def =
   match def.it with
-  | GramD _ | HintD _ -> false
-  | RecD defs -> List.for_all is_valid_def defs
-  | _ -> true
+  | GramD _ | HintD _ -> None
+  | RecD defs ->
+    let defs' = List.filter_map filter_renderable_def defs in
+    if defs' = [] then None else Some {def with it = RecD defs'}
+  | _ -> Some def
 
 let rec is_relation_def def =
   match def.it with
@@ -1250,7 +1252,7 @@ let render_preservation_laws defs =
 let string_of_script (il : script) =
   register_backend_hints il;
   env_ref := Il.Env.env_of_script il;
-  let valid_defs = List.filter is_valid_def il in
+  let valid_defs = List.filter_map filter_renderable_def il in
   let relation_groups, other_defs = List.partition is_relation_def valid_defs in
   let builtins, other_defs = extract_abstract_defs other_defs in
   let type_defs, term_defs = List.partition is_type_definition other_defs in

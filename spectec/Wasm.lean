@@ -1324,11 +1324,7 @@ def instexport : ∀  (var_0 : (List funcaddr)) (var_1 : (List globaladdr)) (var
     { NAME := v_name, ADDR := (.MEM (ma_lst[(proj_uN_0 x)]!)) }
 
 
-/- Relation referenced without an explicit declaration -/
-opaque wf_admininstr : admininstr -> Prop
 
-/- Relation referenced without an explicit declaration -/
-opaque wf_instr : instr -> Prop
 
 /- Inductive Relations Definition at: _specification/wasm-1.0/0-aux.spectec:25.6-25.10 -/
 inductive fun_sum : (List Nat) -> Nat -> Prop where
@@ -1573,6 +1569,85 @@ inductive wf_loadop_ : valtype -> loadop_ -> Prop where
     (wf_loadop_Inn v_Inn var_x) ->
     (v_valtype == (valtype_Inn v_Inn)) ->
     wf_loadop_ v_valtype (.mk_loadop__0 v_Inn var_x)
+
+/- Inductive Relations Definition at: _specification/wasm-1.0/1-syntax.spectec:245.8-245.13 -/
+inductive wf_instr : instr -> Prop where
+  | instr_case_0 : wf_instr .NOP
+  | instr_case_1 : wf_instr .UNREACHABLE
+  | instr_case_2 : wf_instr .DROP
+  | instr_case_3 : wf_instr .SELECT
+  | instr_case_4 : forall (v_blocktype : blocktype) (instr_lst : (List instr)), 
+    Forall (fun (v_instr : instr) => (wf_instr v_instr)) instr_lst ->
+    wf_instr (.BLOCK v_blocktype instr_lst)
+  | instr_case_5 : forall (v_blocktype : blocktype) (instr_lst : (List instr)), 
+    Forall (fun (v_instr : instr) => (wf_instr v_instr)) instr_lst ->
+    wf_instr (.LOOP v_blocktype instr_lst)
+  | instr_case_6 : forall (v_blocktype : blocktype) (instr_lst : (List instr)) (var_0 : (List instr)), 
+    Forall (fun (v_instr : instr) => (wf_instr v_instr)) instr_lst ->
+    Forall (fun (var_0 : instr) => (wf_instr var_0)) var_0 ->
+    wf_instr (.IFELSE v_blocktype instr_lst var_0)
+  | instr_case_7 : forall (v_labelidx : labelidx), 
+    (wf_uN 32 v_labelidx) ->
+    wf_instr (.BR v_labelidx)
+  | instr_case_8 : forall (v_labelidx : labelidx), 
+    (wf_uN 32 v_labelidx) ->
+    wf_instr (.BR_IF v_labelidx)
+  | instr_case_9 : forall (labelidx_lst : (List labelidx)) (var_0 : labelidx), 
+    Forall (fun (v_labelidx : labelidx) => (wf_uN 32 v_labelidx)) labelidx_lst ->
+    (wf_uN 32 var_0) ->
+    wf_instr (.BR_TABLE labelidx_lst var_0)
+  | instr_case_10 : forall (v_funcidx : funcidx), 
+    (wf_uN 32 v_funcidx) ->
+    wf_instr (.CALL v_funcidx)
+  | instr_case_11 : forall (v_typeidx : typeidx), 
+    (wf_uN 32 v_typeidx) ->
+    wf_instr (.CALL_INDIRECT v_typeidx)
+  | instr_case_12 : wf_instr .RETURN
+  | instr_case_13 : forall (v_valtype : valtype) (v_val_ : val_), 
+    (wf_val_ v_valtype v_val_) ->
+    wf_instr (.CONST v_valtype v_val_)
+  | instr_case_14 : forall (v_valtype : valtype) (v_unop_ : unop_), 
+    (wf_unop_ v_valtype v_unop_) ->
+    wf_instr (.UNOP v_valtype v_unop_)
+  | instr_case_15 : forall (v_valtype : valtype) (v_binop_ : binop_), 
+    (wf_binop_ v_valtype v_binop_) ->
+    wf_instr (.BINOP v_valtype v_binop_)
+  | instr_case_16 : forall (v_valtype : valtype) (v_testop_ : testop_), 
+    (wf_testop_ v_valtype v_testop_) ->
+    wf_instr (.TESTOP v_valtype v_testop_)
+  | instr_case_17 : forall (v_valtype : valtype) (v_relop_ : relop_), 
+    (wf_relop_ v_valtype v_relop_) ->
+    wf_instr (.RELOP v_valtype v_relop_)
+  | instr_case_18 : forall (valtype_1 : valtype) (valtype_2 : valtype) (v_cvtop : cvtop), 
+    (valtype_1 != valtype_2) ->
+    wf_instr (.CVTOP valtype_1 valtype_2 v_cvtop)
+  | instr_case_19 : forall (v_localidx : localidx), 
+    (wf_uN 32 v_localidx) ->
+    wf_instr (.LOCAL_GET v_localidx)
+  | instr_case_20 : forall (v_localidx : localidx), 
+    (wf_uN 32 v_localidx) ->
+    wf_instr (.LOCAL_SET v_localidx)
+  | instr_case_21 : forall (v_localidx : localidx), 
+    (wf_uN 32 v_localidx) ->
+    wf_instr (.LOCAL_TEE v_localidx)
+  | instr_case_22 : forall (v_globalidx : globalidx), 
+    (wf_uN 32 v_globalidx) ->
+    wf_instr (.GLOBAL_GET v_globalidx)
+  | instr_case_23 : forall (v_globalidx : globalidx), 
+    (wf_uN 32 v_globalidx) ->
+    wf_instr (.GLOBAL_SET v_globalidx)
+  | instr_case_24 : forall (v_valtype : valtype) (loadop__opt : (Option loadop_)) (v_memarg : memarg), 
+    Forall (fun (v_loadop_ : loadop_) => (wf_loadop_ v_valtype v_loadop_)) (Option.toList loadop__opt) ->
+    (wf_memarg v_memarg) ->
+    wf_instr (.LOAD v_valtype loadop__opt v_memarg)
+  | instr_case_25 : forall (v_valtype : valtype) (sz_opt : (Option sz)) (v_memarg : memarg) (Inn_opt : (Option Inn)), 
+    Forall (fun (v_sz : sz) => (wf_sz v_sz)) (Option.toList sz_opt) ->
+    (wf_memarg v_memarg) ->
+    ((Inn_opt == none) <-> (sz_opt == none)) ->
+    Forall₂ (fun (v_Inn : Inn) (v_sz : sz) => ((v_valtype == (valtype_Inn v_Inn)) && ((proj_sz_0 v_sz) < (size (valtype_Inn v_Inn))))) (Option.toList Inn_opt) (Option.toList sz_opt) ->
+    wf_instr (.STORE v_valtype sz_opt v_memarg)
+  | instr_case_26 : wf_instr .MEMORY_SIZE
+  | instr_case_27 : wf_instr .MEMORY_GROW
 
 /- Inductive Relations Definition at: _specification/wasm-1.0/1-syntax.spectec:267.8-267.12 -/
 inductive wf_func : func -> Prop where
@@ -2248,6 +2323,95 @@ inductive wf_state : state -> Prop where
     (wf_store v_store) ->
     (wf_frame v_frame) ->
     wf_state (.mk_state v_store v_frame)
+
+/- Inductive Relations Definition at: _specification/wasm-1.0/4-runtime.spectec:105.8-105.18 -/
+inductive wf_admininstr : admininstr -> Prop where
+  | admininstr_case_0 : wf_admininstr .NOP
+  | admininstr_case_1 : wf_admininstr .UNREACHABLE
+  | admininstr_case_2 : wf_admininstr .DROP
+  | admininstr_case_3 : wf_admininstr .SELECT
+  | admininstr_case_4 : forall (v_blocktype : blocktype) (instr_lst : (List instr)), 
+    Forall (fun (v_instr : instr) => (wf_instr v_instr)) instr_lst ->
+    wf_admininstr (.BLOCK v_blocktype instr_lst)
+  | admininstr_case_5 : forall (v_blocktype : blocktype) (instr_lst : (List instr)), 
+    Forall (fun (v_instr : instr) => (wf_instr v_instr)) instr_lst ->
+    wf_admininstr (.LOOP v_blocktype instr_lst)
+  | admininstr_case_6 : forall (v_blocktype : blocktype) (instr_lst : (List instr)) (var_0 : (List instr)), 
+    Forall (fun (v_instr : instr) => (wf_instr v_instr)) instr_lst ->
+    Forall (fun (var_0 : instr) => (wf_instr var_0)) var_0 ->
+    wf_admininstr (.IFELSE v_blocktype instr_lst var_0)
+  | admininstr_case_7 : forall (v_labelidx : labelidx), 
+    (wf_uN 32 v_labelidx) ->
+    wf_admininstr (.BR v_labelidx)
+  | admininstr_case_8 : forall (v_labelidx : labelidx), 
+    (wf_uN 32 v_labelidx) ->
+    wf_admininstr (.BR_IF v_labelidx)
+  | admininstr_case_9 : forall (labelidx_lst : (List labelidx)) (var_0 : labelidx), 
+    Forall (fun (v_labelidx : labelidx) => (wf_uN 32 v_labelidx)) labelidx_lst ->
+    (wf_uN 32 var_0) ->
+    wf_admininstr (.BR_TABLE labelidx_lst var_0)
+  | admininstr_case_10 : forall (v_funcidx : funcidx), 
+    (wf_uN 32 v_funcidx) ->
+    wf_admininstr (.CALL v_funcidx)
+  | admininstr_case_11 : forall (v_typeidx : typeidx), 
+    (wf_uN 32 v_typeidx) ->
+    wf_admininstr (.CALL_INDIRECT v_typeidx)
+  | admininstr_case_12 : wf_admininstr .RETURN
+  | admininstr_case_13 : forall (v_valtype : valtype) (v_val_ : val_), 
+    (wf_val_ v_valtype v_val_) ->
+    wf_admininstr (.CONST v_valtype v_val_)
+  | admininstr_case_14 : forall (v_valtype : valtype) (v_unop_ : unop_), 
+    (wf_unop_ v_valtype v_unop_) ->
+    wf_admininstr (.UNOP v_valtype v_unop_)
+  | admininstr_case_15 : forall (v_valtype : valtype) (v_binop_ : binop_), 
+    (wf_binop_ v_valtype v_binop_) ->
+    wf_admininstr (.BINOP v_valtype v_binop_)
+  | admininstr_case_16 : forall (v_valtype : valtype) (v_testop_ : testop_), 
+    (wf_testop_ v_valtype v_testop_) ->
+    wf_admininstr (.TESTOP v_valtype v_testop_)
+  | admininstr_case_17 : forall (v_valtype : valtype) (v_relop_ : relop_), 
+    (wf_relop_ v_valtype v_relop_) ->
+    wf_admininstr (.RELOP v_valtype v_relop_)
+  | admininstr_case_18 : forall (valtype_1 : valtype) (valtype_2 : valtype) (v_cvtop : cvtop), 
+    (valtype_1 != valtype_2) ->
+    wf_admininstr (.CVTOP valtype_1 valtype_2 v_cvtop)
+  | admininstr_case_19 : forall (v_localidx : localidx), 
+    (wf_uN 32 v_localidx) ->
+    wf_admininstr (.LOCAL_GET v_localidx)
+  | admininstr_case_20 : forall (v_localidx : localidx), 
+    (wf_uN 32 v_localidx) ->
+    wf_admininstr (.LOCAL_SET v_localidx)
+  | admininstr_case_21 : forall (v_localidx : localidx), 
+    (wf_uN 32 v_localidx) ->
+    wf_admininstr (.LOCAL_TEE v_localidx)
+  | admininstr_case_22 : forall (v_globalidx : globalidx), 
+    (wf_uN 32 v_globalidx) ->
+    wf_admininstr (.GLOBAL_GET v_globalidx)
+  | admininstr_case_23 : forall (v_globalidx : globalidx), 
+    (wf_uN 32 v_globalidx) ->
+    wf_admininstr (.GLOBAL_SET v_globalidx)
+  | admininstr_case_24 : forall (v_valtype : valtype) (loadop__opt : (Option loadop_)) (v_memarg : memarg), 
+    Forall (fun (v_loadop_ : loadop_) => (wf_loadop_ v_valtype v_loadop_)) (Option.toList loadop__opt) ->
+    (wf_memarg v_memarg) ->
+    wf_admininstr (.LOAD v_valtype loadop__opt v_memarg)
+  | admininstr_case_25 : forall (v_valtype : valtype) (sz_opt : (Option sz)) (v_memarg : memarg) (Inn_opt : (Option Inn)), 
+    Forall (fun (v_sz : sz) => (wf_sz v_sz)) (Option.toList sz_opt) ->
+    (wf_memarg v_memarg) ->
+    ((Inn_opt == none) <-> (sz_opt == none)) ->
+    Forall₂ (fun (v_Inn : Inn) (v_sz : sz) => ((v_valtype == (valtype_Inn v_Inn)) && ((proj_sz_0 v_sz) < (size (valtype_Inn v_Inn))))) (Option.toList Inn_opt) (Option.toList sz_opt) ->
+    wf_admininstr (.STORE v_valtype sz_opt v_memarg)
+  | admininstr_case_26 : wf_admininstr .MEMORY_SIZE
+  | admininstr_case_27 : wf_admininstr .MEMORY_GROW
+  | admininstr_case_28 : forall (v_funcaddr : funcaddr), wf_admininstr (.CALL_ADDR v_funcaddr)
+  | admininstr_case_29 : forall (v_n : n) (instr_lst : (List instr)) (admininstr_lst : (List admininstr)), 
+    Forall (fun (v_instr : instr) => (wf_instr v_instr)) instr_lst ->
+    Forall (fun (v_admininstr : admininstr) => (wf_admininstr v_admininstr)) admininstr_lst ->
+    wf_admininstr (.LABEL_ v_n instr_lst admininstr_lst)
+  | admininstr_case_30 : forall (v_n : n) (v_frame : frame) (admininstr_lst : (List admininstr)), 
+    (wf_frame v_frame) ->
+    Forall (fun (v_admininstr : admininstr) => (wf_admininstr v_admininstr)) admininstr_lst ->
+    wf_admininstr (.FRAME_ v_n v_frame admininstr_lst)
+  | admininstr_case_31 : wf_admininstr .TRAP
 
 /- Inductive Relations Definition at: _specification/wasm-1.0/4-runtime.spectec:94.8-94.14 -/
 inductive wf_config : config -> Prop where
