@@ -554,10 +554,24 @@ let string_of_eqtype_proof recursive (cant_do_equality: bool) id (binds : bind l
 let string_of_relation_args typ = 
   string_of_list "" " -> " " -> " (render_type REL) (transform_case_typ typ)
   
+let requires_propositional_equality typ =
+  match typ.it with
+  | VarT (id, _) ->
+    List.mem id.it ["funcinst"; "func"; "frame"]
+  | _ -> false
+
+let render_premise_exp exp =
+  match exp.it with
+  | CmpE (`EqOp, _, e1, e2) when requires_propositional_equality e1.note ->
+    parens (render_exp REL e1 ^ " = " ^ render_exp REL e2)
+  | CmpE (`NeOp, _, e1, e2) when requires_propositional_equality e1.note ->
+    parens (render_exp REL e1 ^ " ≠ " ^ render_exp REL e2)
+  | _ -> render_exp REL exp
+
 let rec render_prem prem =
   let r_func = render_prem in 
   match prem.it with
-  | IfPr exp -> render_exp REL exp
+  | IfPr exp -> render_premise_exp exp
   | RulePr (id, _m, exp) -> parens (id.it ^ string_of_list_prefix " " " " (render_exp REL) (transform_case_tup exp))
   | NegPr p -> parens ("¬" ^ r_func p)
   | ElsePr -> error prem.at "Encountered an otherwise premise. Run the else-removal pass"
